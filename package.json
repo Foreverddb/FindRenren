@@ -1,0 +1,28 @@
+{
+  "name": "xunzhi-art-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "prepare:models": "node scripts/prepare-models.mjs",
+    "predev": "npm run prepare:models",
+    "dev": "vite --host 127.0.0.1",
+    "prebuild": "npm run prepare:models",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "verify:static": "node scripts/verify-static-build.mjs",
+    "preverify": "npm run prepare:models",
+    "verify": "node scripts/verify.mjs"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
+    "lucide": "^0.468.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.0",
+    "vite": "^6.0.7"
+  }
+}

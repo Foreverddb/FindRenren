@@ -1,0 +1,292 @@
+{
+  "page": "http://127.0.0.1:4180/findxx/",
+  "desktopViewport": "1440 × 1000",
+  "mobileViewport": "390 × 844",
+  "selectedColors": [
+    "#277F9F",
+    "#2F8A66"
+  ],
+  "customCaption": "星河。",
+  "customTextColor": "#FFD84A",
+  "customSignature": "Luna",
+  "pixelChannelDeltas": {
+    "glowStick": 194,
+    "scarf": 232,
+    "body": 190,
+    "sign": 195,
+    "portrait": 0,
+    "beak": 0,
+    "blackBody": 0
+  },
+  "manualColorSynced": true,
+  "completeAreaReplacement": true,
+  "regionControlsRemoved": true,
+  "zeroStrengthRestoresOriginal": true,
+  "fixedCharacterFrontendRendered": true,
+  "fixedPrefixLocked": true,
+  "editableTextChanged": true,
+  "scarfTextSynced": true,
+  "scarfEnglishPreserved": true,
+  "scarfBordersPreserved": true,
+  "signatureChanged": true,
+  "signatureBounds": {
+    "top": 921,
+    "bottom": 951,
+    "center": 936
+  },
+  "signatureVerticallyCentered": true,
+  "textColorSynced": true,
+  "textDefaultsRestored": true,
+  "customLogo": "favicon.svg",
+  "defaultLogo": "StarHoney",
+  "defaultLogoIsStarHoney": true,
+  "logoUploadWorks": true,
+  "logoImageCoversExpandedArea": true,
+  "logoRestoreWorks": true,
+  "customLogoText": "Moonlight",
+  "logoTextModeWorks": true,
+  "logoTextFollowsScarf": true,
+  "logoTextGeometry": {
+    "pixels": 4636,
+    "bounds": {
+      "left": 627,
+      "right": 832,
+      "top": 543,
+      "bottom": 617
+    },
+    "left": {
+      "pixels": 2135,
+      "centerY": 598.2805620608899
+    },
+    "right": {
+      "pixels": 2501,
+      "centerY": 576.9464214314274
+    },
+    "rise": 21.334140629462468
+  },
+  "logoImageModeRestoresOriginal": true,
+  "logoDefaultsRestored": true,
+  "customPortrait": "portrait-test-source.png",
+  "portraitFullReplaceWorks": true,
+  "portraitHighCutoutWorks": true,
+  "portraitLowCutoutWorks": true,
+  "portraitFrameSmoothInFull": true,
+  "portraitFrameSmoothInHigh": true,
+  "portraitFrameSmoothInLow": true,
+  "portraitFullStrictlyClipped": true,
+  "portraitHighStrictlyClipped": true,
+  "portraitLowStrictlyClipped": true,
+  "portraitFullHasSolidMatte": true,
+  "portraitHighHasSolidBackground": true,
+  "portraitLowHasSolidBackground": true,
+  "portraitFullBackdrop": {
+    "expected": "#F4E8CB",
+    "solidPixels": 4276,
+    "totalPixels": 62304,
+    "ratio": 0.06863122752953262
+  },
+  "portraitHighBackdrop": {
+    "expected": "#F4E8CB",
+    "solidPixels": 32219,
+    "totalPixels": 62304,
+    "ratio": 0.5171257062146892
+  },
+  "portraitLowBackdrop": {
+    "expected": "#F4E8CB",
+    "solidPixels": 30834,
+    "totalPixels": 62304,
+    "ratio": 0.4948959938366718
+  },
+  "portraitOutsideHashesBefore": {
+    "left": 2795457809,
+    "right": 3816356037,
+    "top": 703107699,
+    "bottom": 3021828203
+  },
+  "portraitOutsideHashesInFull": {
+    "left": 2795457809,
+    "right": 3816356037,
+    "top": 703107699,
+    "bottom": 3021828203
+  },
+  "portraitOutsideHashesInHigh": {
+    "left": 2795457809,
+    "right": 3816356037,
+    "top": 703107699,
+    "bottom": 3021828203
+  },
+  "portraitOutsideHashesInLow": {
+    "left": 2795457809,
+    "right": 3816356037,
+    "top": 703107699,
+    "bottom": 3021828203
+  },
+  "portraitFrameSmoothnessInFull": {
+    "lines": {
+      "top": {
+        "coverage": 1,
+        "maximumGap": 0
+      },
+      "left": {
+        "coverage": 1,
+        "maximumGap": 0
+      },
+      "right": {
+        "coverage": 1,
+        "maximumGap": 0
+      }
+    },
+    "minimumCoverage": 1,
+    "maximumGap": 0,
+    "cornerStarts": [
+      485,
+      478,
+      475,
+      474,
+      474
+    ],
+    "curveSpan": 11,
+    "monotonicCurve": true
+  },
+  "portraitFrameSmoothnessInHigh": {
+    "lines": {
+      "top": {
+        "coverage": 1,
+        "maximumGap": 0
+      },
+      "left": {
+        "coverage": 1,
+        "maximumGap": 0
+      },
+      "right": {
+        "coverage": 1,
+        "maximumGap": 0
+      }
+    },
+    "minimumCoverage": 1,
+    "maximumGap": 0,
+    "cornerStarts": [
+      485,
+      478,
+      475,
+      474,
+      474
+    ],
+    "curveSpan": 11,
+    "monotonicCurve": true
+  },
+  "portraitFrameSmoothnessInLow": {
+    "lines": {
+      "top": {
+        "coverage": 1,
+        "maximumGap": 0
+      },
+      "left": {
+        "coverage": 1,
+        "maximumGap": 0
+      },
+      "right": {
+        "coverage": 1,
+        "maximumGap": 0
+      }
+    },
+    "minimumCoverage": 1,
+    "maximumGap": 0,
+    "cornerStarts": [
+      485,
+      478,
+      475,
+      474,
+      474
+    ],
+    "curveSpan": 11,
+    "monotonicCurve": true
+  },
+  "portraitCachedQualitySwitch": true,
+  "portraitCachedModeSwitch": true,
+  "portraitRestoreWorks": true,
+  "portraitDefaultsRestored": true,
+  "highQualityDefault": true,
+  "resetPortraitHighQuality": true,
+  "portraitHighCutoutAlpha": {
+    "width": 1359,
+    "height": 1359,
+    "transparent": 799785,
+    "soft": 49990,
+    "opaque": 997106,
+    "transparentRatio": 0.4330463088850879,
+    "softRatio": 0.027067255551386366,
+    "opaqueRatio": 0.5398864355635258,
+    "transparentSamples": [
+      0,
+      0,
+      0
+    ],
+    "opaqueSamples": [
+      254,
+      254,
+      254
+    ],
+    "transparentMaximum": 0,
+    "opaqueMinimum": 254
+  },
+  "portraitHighCutoutAlphaQuality": true,
+  "portraitLowCutoutAlpha": {
+    "width": 1359,
+    "height": 1359,
+    "transparent": 753065,
+    "soft": 87774,
+    "opaque": 1006042,
+    "transparentRatio": 0.40774960595728693,
+    "softRatio": 0.04752553088152404,
+    "opaqueRatio": 0.5447248631611891,
+    "transparentSamples": [
+      0,
+      0,
+      0
+    ],
+    "opaqueSamples": [
+      254,
+      254,
+      254
+    ],
+    "transparentMaximum": 0,
+    "opaqueMinimum": 254
+  },
+  "portraitLowCutoutAlphaQuality": true,
+  "portraitModels": {
+    "low": "Xenova/modnet q8",
+    "high": "onnx-community/BEN2-ONNX FP16"
+  },
+  "portraitModelInputs": {
+    "low": "256 × 256",
+    "high": "1024 × 1024"
+  },
+  "portraitModelSelfHosted": true,
+  "modelRequestStartedAt": {
+    "low": 1785094951172,
+    "high": 1785094951173
+  },
+  "highModelPreloadStartedBeforeCutout": true,
+  "lowModelPreloadStartedBeforeCutout": true,
+  "editorReadyWhileModelPreloading": true,
+  "modelProgressSilentDuringPreload": true,
+  "highProgressVisibleOnDemand": true,
+  "lowProgressVisibleOnDemand": true,
+  "highProgressBeforeRelease": 0,
+  "highProgressAfterReady": 100,
+  "highProgressAdvanced": true,
+  "highProgressHiddenAfterReady": true,
+  "lowProgressBeforeRelease": 0,
+  "lowProgressAfterReady": 100,
+  "lowProgressAdvanced": true,
+  "lowProgressHiddenAfterReady": true,
+  "highModelState": "ready",
+  "lowModelState": "ready",
+  "remoteModelRequests": [],
+  "longTextFits": true,
+  "protectedAreasUnchanged": true,
+  "exportSize": "1176 × 1224",
+  "horizontalOverflow": 0,
+  "consoleErrors": []
+}

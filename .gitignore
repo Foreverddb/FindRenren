@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.vite/
+test-results/
+playwright-report/
+verification/*.png
+.vite-*.log
+
+# Rebuilt from model-parts/ben2 before development and production builds.
+/public/models/onnx-community/BEN2-ONNX/onnx/model_fp16.onnx
+*.model-assembly.tmp

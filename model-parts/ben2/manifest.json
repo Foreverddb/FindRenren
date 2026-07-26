@@ -1,0 +1,12 @@
+{
+  "destination": "public/models/onnx-community/BEN2-ONNX/onnx/model_fp16.onnx",
+  "size": 219121675,
+  "sha256": "dfdc25f421f32a0d1268e0f2ff2153d340e8f1d52d3dd16f5dc33c1ce85cedf1",
+  "parts": [
+    { "file": "model_fp16.onnx.part-001", "size": 47185920 },
+    { "file": "model_fp16.onnx.part-002", "size": 47185920 },
+    { "file": "model_fp16.onnx.part-003", "size": 47185920 },
+    { "file": "model_fp16.onnx.part-004", "size": 47185920 },
+    { "file": "model_fp16.onnx.part-005", "size": 30377995 }
+  ]
+}
