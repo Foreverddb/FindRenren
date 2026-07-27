@@ -98,9 +98,10 @@ const desktopBrand = await desktop.evaluate(() => {
     documentTitle: document.title,
     logoLoaded: logo.complete && logo.naturalWidth === 147 && logo.naturalHeight === 147,
     logoPath: new URL(logo.currentSrc).pathname,
-    titleImageLoaded: titleImage.complete && titleImage.naturalWidth === 416 && titleImage.naturalHeight === 216,
+    titleImageLoaded: titleImage.complete && titleImage.naturalWidth === 956 && titleImage.naturalHeight === 216,
     titleImagePath: new URL(titleImage.currentSrc).pathname,
     titleImageAlt: titleImage.alt,
+    titleDisplayWidth: titleBounds.width,
     byline: byline.textContent,
     subtitle: subtitle.textContent,
     titleBylineGap: bylineBounds.left - titleBounds.right,
@@ -110,20 +111,21 @@ const desktopBrand = await desktop.evaluate(() => {
       .every((property) => bylineStyle[property] === subtitleStyle[property]),
   };
 });
-const browserTabTitleUnchanged = desktopBrand.documentTitle === '寻之绘馆';
+const browserTabTitleCorrect = desktopBrand.documentTitle === '寻找恋之空';
 const localBrandAssetsLoaded = desktopBrand.logoLoaded
   && desktopBrand.titleImageLoaded
   && desktopBrand.logoPath.endsWith('/assets/brand-logo.png')
-  && desktopBrand.titleImagePath.endsWith('/assets/brand-xunzhi-brush.png');
-const rasterBrandTitleCorrect = desktopBrand.titleImageAlt === '寻之';
+  && desktopBrand.titleImagePath.endsWith('/assets/brand-find-love-sky-brush.png');
+const rasterBrandTitleCorrect = desktopBrand.titleImageAlt === '寻找恋之空'
+  && desktopBrand.titleDisplayWidth === 160;
 const brandBylineCorrect = desktopBrand.byline === '——by DdB' && desktopBrand.titleBylineGap >= 14;
 const brandSubtitleCorrect = desktopBrand.subtitle === '寻之，恋恋也'
   && desktopBrand.bylineSubtitleGap >= 14
   && desktopBrand.captionsAligned
   && desktopBrand.captionsShareStyle;
-if (!browserTabTitleUnchanged) throw new Error(`浏览器 Tab 标题被意外修改为：${desktopBrand.documentTitle}`);
+if (!browserTabTitleCorrect) throw new Error(`浏览器 Tab 标题不正确：${desktopBrand.documentTitle}`);
 if (!localBrandAssetsLoaded) throw new Error(`顶栏本地品牌资源加载失败：${JSON.stringify(desktopBrand)}`);
-if (!rasterBrandTitleCorrect) throw new Error('顶栏毛笔字图片未正确表达“寻之”');
+if (!rasterBrandTitleCorrect) throw new Error('顶栏毛笔字图片未正确表达“寻找恋之空”');
 if (!brandBylineCorrect) throw new Error(`顶栏署名或间距不正确：${JSON.stringify(desktopBrand)}`);
 if (!brandSubtitleCorrect) throw new Error(`顶栏副标题样式或排列不正确：${JSON.stringify(desktopBrand)}`);
 await desktop.locator('.topbar').screenshot({ path: path.join(outputDirectory, 'desktop-brand-topbar.png') });
@@ -145,7 +147,7 @@ const desktopToolbarEnhancements = await desktop.evaluate(() => {
     ) < 1,
     recommendationBackground: recommendationStyle.backgroundColor,
     greatVibesLoaded: document.fonts.check('48px "Great Vibes Local"', 'StarHoney Renren'),
-    maShanZhengLoaded: document.fonts.check('48px "Ma Shan Zheng Local"', '寻之恋恋找'),
+    maShanZhengLoaded: document.fonts.check('48px "Ma Shan Zheng Local"', '寻找恋之空恋恋找'),
     signatureFont: signatureStyle.fontFamily,
     logoTextFont: logoTextStyle.fontFamily,
   };
@@ -971,20 +973,27 @@ const mobileBrandLayout = await mobile.evaluate(() => {
   const actions = document.querySelector('.topbar-actions').getBoundingClientRect();
   const logo = document.querySelector('.brand-logo');
   const titleImage = document.querySelector('.brand-title-image');
-  const subtitle = document.querySelector('.brand-subtitle');
+  const titleBounds = titleImage.getBoundingClientRect();
+  const byline = document.querySelector('.brand-byline').getBoundingClientRect();
+  const subtitleElement = document.querySelector('.brand-subtitle');
+  const subtitle = subtitleElement.getBoundingClientRect();
   return {
     brandRight: brand.right,
     actionsLeft: actions.left,
     logoWidth: logo.getBoundingClientRect().width,
-    titleWidth: titleImage.getBoundingClientRect().width,
-    subtitle: subtitle.textContent,
+    titleWidth: titleBounds.width,
+    subtitle: subtitleElement.textContent,
+    captionsStacked: Math.abs(byline.left - subtitle.left) < 1
+      && byline.bottom <= subtitle.top
+      && Math.abs((titleBounds.top + titleBounds.bottom) / 2 - (byline.top + subtitle.bottom) / 2) < 3,
     imagesLoaded: logo.complete && logo.naturalWidth > 0 && titleImage.complete && titleImage.naturalWidth > 0,
   };
 });
 const mobileBrandFits = mobileBrandLayout.brandRight <= mobileBrandLayout.actionsLeft - 8
   && mobileBrandLayout.logoWidth === 34
-  && mobileBrandLayout.titleWidth === 62
+  && mobileBrandLayout.titleWidth === 128
   && mobileBrandLayout.subtitle === '寻之，恋恋也'
+  && mobileBrandLayout.captionsStacked
   && mobileBrandLayout.imagesLoaded;
 if (!mobileBrandFits) throw new Error(`移动端顶栏品牌与操作区发生重叠：${JSON.stringify(mobileBrandLayout)}`);
 await mobile.locator('.topbar').screenshot({ path: path.join(outputDirectory, 'mobile-brand-topbar.png') });
@@ -1085,16 +1094,18 @@ const compactBrandLayout = await mobile.evaluate(() => {
   const actions = document.querySelector('.topbar-actions').getBoundingClientRect();
   const subtitle = document.querySelector('.brand-subtitle').getBoundingClientRect();
   const byline = document.querySelector('.brand-byline').getBoundingClientRect();
+  const titleImage = document.querySelector('.brand-title-image').getBoundingClientRect();
   return {
     brandRight: brand.right,
     actionsLeft: actions.left,
-    bylineCenter: (byline.top + byline.bottom) / 2,
-    subtitleCenter: (subtitle.top + subtitle.bottom) / 2,
+    captionsStacked: Math.abs(byline.left - subtitle.left) < 1 && byline.bottom <= subtitle.top,
+    titleWidth: titleImage.width,
     overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
   };
 });
 const compactBrandFits = compactBrandLayout.brandRight <= compactBrandLayout.actionsLeft - 4
-  && Math.abs(compactBrandLayout.bylineCenter - compactBrandLayout.subtitleCenter) < 1
+  && compactBrandLayout.titleWidth === 110
+  && compactBrandLayout.captionsStacked
   && compactBrandLayout.overflow === 0;
 if (!compactBrandFits) throw new Error(`320px 顶栏品牌发生重叠或溢出：${JSON.stringify(compactBrandLayout)}`);
 await mobile.locator('.topbar').screenshot({ path: path.join(outputDirectory, 'compact-brand-topbar.png') });
@@ -1193,7 +1204,7 @@ const report = {
   mobileHighQualityModalFits,
   mobileHighQualityModalLayout,
   desktopBrand,
-  browserTabTitleUnchanged,
+  browserTabTitleCorrect,
   localBrandAssetsLoaded,
   rasterBrandTitleCorrect,
   brandBylineCorrect,

@@ -214,7 +214,7 @@ async function initializeEditor() {
   if (document.fonts) {
     await Promise.allSettled([
       document.fonts.load('48px "Great Vibes Local"', 'StarHoney Renren'),
-      document.fonts.load('48px "Ma Shan Zheng Local"', '寻之恋恋找'),
+      document.fonts.load('48px "Ma Shan Zheng Local"', '寻找恋之空恋恋找'),
     ]);
   }
 
