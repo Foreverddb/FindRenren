@@ -54,7 +54,8 @@ const SIGNATURE_AREA = {
   y: 918,
   width: 176,
   height: 50,
-  textX: 545,
+  centerX: 602,
+  opticalOffsetX: 1.5,
   centerY: 936,
   verticalOffset: 3,
   maxWidth: 151,
@@ -1431,6 +1432,9 @@ function renderSignature() {
   context.textAlign = 'left';
   context.textBaseline = 'alphabetic';
   const metrics = context.measureText(state.signature);
+  const inkLeft = metrics.actualBoundingBoxLeft || 0;
+  const inkRight = metrics.actualBoundingBoxRight || metrics.width;
+  const drawX = SIGNATURE_AREA.centerX - (inkRight - inkLeft) / 2 + SIGNATURE_AREA.opticalOffsetX;
   const ascent = metrics.actualBoundingBoxAscent || fontSize * 0.72;
   const descent = metrics.actualBoundingBoxDescent || fontSize * 0.2;
   const baseline = SIGNATURE_AREA.centerY + (ascent - descent) / 2 + SIGNATURE_AREA.verticalOffset;
@@ -1438,7 +1442,7 @@ function renderSignature() {
   context.shadowColor = 'rgba(255, 255, 255, 0.45)';
   context.shadowBlur = 0.7;
   context.shadowOffsetY = 1;
-  context.fillText(state.signature, SIGNATURE_AREA.textX, baseline);
+  context.fillText(state.signature, drawX, baseline);
   context.restore();
 }
 

@@ -70,11 +70,62 @@
   "scarfBordersPreserved": true,
   "signatureChanged": true,
   "signatureBounds": {
+    "left": 572,
+    "right": 631,
+    "horizontalCenter": 601.5,
     "top": 920,
-    "bottom": 953,
-    "center": 936.5
+    "bottom": 956,
+    "center": 938
   },
   "signatureVerticallyCentered": true,
+  "signatureCenterTarget": 602,
+  "signatureCenterSamples": [
+    {
+      "signature": "Amy",
+      "bounds": {
+        "left": 576,
+        "right": 629,
+        "horizontalCenter": 602.5,
+        "top": 921,
+        "bottom": 957,
+        "center": 939
+      }
+    },
+    {
+      "signature": "Luna",
+      "bounds": {
+        "left": 572,
+        "right": 631,
+        "horizontalCenter": 601.5,
+        "top": 920,
+        "bottom": 956,
+        "center": 938
+      }
+    },
+    {
+      "signature": "Mikan",
+      "bounds": {
+        "left": 559,
+        "right": 645,
+        "horizontalCenter": 602,
+        "top": 923,
+        "bottom": 954,
+        "center": 938.5
+      }
+    },
+    {
+      "signature": "Renren",
+      "bounds": {
+        "left": 560,
+        "right": 645,
+        "horizontalCenter": 602.5,
+        "top": 926,
+        "bottom": 952,
+        "center": 939
+      }
+    }
+  ],
+  "signatureHorizontallyCentered": true,
   "textColorSynced": true,
   "textDefaultsRestored": true,
   "customLogo": "favicon.svg",
@@ -259,80 +310,80 @@
       "bytes": "0 MB / 219.1 MB"
     },
     {
-      "progress": 5.56,
-      "bytes": "12.2 MB / 219.1 MB"
+      "progress": 5.74,
+      "bytes": "12.6 MB / 219.1 MB"
     },
     {
-      "progress": 10.56,
-      "bytes": "23.1 MB / 219.1 MB"
+      "progress": 11.01,
+      "bytes": "24.1 MB / 219.1 MB"
     },
     {
-      "progress": 15.57,
-      "bytes": "34.1 MB / 219.1 MB"
+      "progress": 16.05,
+      "bytes": "35.2 MB / 219.1 MB"
     },
     {
-      "progress": 20.68,
-      "bytes": "45.3 MB / 219.1 MB"
+      "progress": 21.06,
+      "bytes": "46.1 MB / 219.1 MB"
     },
     {
-      "progress": 25.79,
-      "bytes": "56.5 MB / 219.1 MB"
+      "progress": 26.23,
+      "bytes": "57.5 MB / 219.1 MB"
     },
     {
-      "progress": 30.79,
-      "bytes": "67.5 MB / 219.1 MB"
+      "progress": 31.34,
+      "bytes": "68.7 MB / 219.1 MB"
     },
     {
-      "progress": 36.14,
-      "bytes": "79.2 MB / 219.1 MB"
+      "progress": 36.37,
+      "bytes": "79.7 MB / 219.1 MB"
     },
     {
-      "progress": 41.15,
-      "bytes": "90.2 MB / 219.1 MB"
+      "progress": 41.91,
+      "bytes": "91.8 MB / 219.1 MB"
     },
     {
-      "progress": 46.63,
-      "bytes": "102.2 MB / 219.1 MB"
+      "progress": 47.06,
+      "bytes": "103.1 MB / 219.1 MB"
     },
     {
-      "progress": 51.68,
-      "bytes": "113.2 MB / 219.1 MB"
+      "progress": 52.11,
+      "bytes": "114.2 MB / 219.1 MB"
     },
     {
-      "progress": 56.76,
-      "bytes": "124.4 MB / 219.1 MB"
+      "progress": 57.42,
+      "bytes": "125.8 MB / 219.1 MB"
     },
     {
-      "progress": 62.21,
-      "bytes": "136.3 MB / 219.1 MB"
+      "progress": 62.62,
+      "bytes": "137.2 MB / 219.1 MB"
     },
     {
-      "progress": 67.38,
-      "bytes": "147.6 MB / 219.1 MB"
+      "progress": 67.95,
+      "bytes": "148.9 MB / 219.1 MB"
     },
     {
-      "progress": 72.74,
-      "bytes": "159.4 MB / 219.1 MB"
+      "progress": 73.16,
+      "bytes": "160.3 MB / 219.1 MB"
     },
     {
-      "progress": 77.93,
-      "bytes": "170.8 MB / 219.1 MB"
+      "progress": 78.48,
+      "bytes": "172.0 MB / 219.1 MB"
     },
     {
-      "progress": 83.27,
-      "bytes": "182.5 MB / 219.1 MB"
+      "progress": 83.71,
+      "bytes": "183.4 MB / 219.1 MB"
     },
     {
-      "progress": 88.47,
-      "bytes": "193.9 MB / 219.1 MB"
+      "progress": 89.01,
+      "bytes": "195.0 MB / 219.1 MB"
     },
     {
-      "progress": 93.79,
-      "bytes": "205.5 MB / 219.1 MB"
+      "progress": 94.27,
+      "bytes": "206.6 MB / 219.1 MB"
     },
     {
-      "progress": 99.04,
-      "bytes": "217.0 MB / 219.1 MB"
+      "progress": 99.54,
+      "bytes": "218.1 MB / 219.1 MB"
     },
     {
       "progress": 100,
@@ -454,8 +505,8 @@
   },
   "portraitModelSelfHosted": true,
   "modelRequestStartedAt": {
-    "low": 1785123828162,
-    "high": 1785123828162
+    "low": 1785124371855,
+    "high": 1785124371855
   },
   "highModelPreloadStartedBeforeCutout": true,
   "lowModelPreloadStartedBeforeCutout": true,

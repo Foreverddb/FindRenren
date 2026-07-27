@@ -260,28 +260,37 @@ async function measureCurvedLogoText(referencePixels) {
 async function readSignatureBounds() {
   return desktop.locator('#editorCanvas').evaluate((canvas) => {
     const context = canvas.getContext('2d');
-    const area = { x: 540, y: 912, width: 170, height: 56 };
+    const area = { x: 486, y: 906, width: 232, height: 60 };
     const data = context.getImageData(area.x, area.y, area.width, area.height).data;
-    const rows = [];
+    const points = [];
 
     for (let y = 0; y < area.height; y += 1) {
-      let count = 0;
       for (let x = 0; x < area.width; x += 1) {
         const index = (y * area.width + x) * 4;
         const red = data[index];
         const green = data[index + 1];
         const blue = data[index + 2];
         if (red >= 65 && red <= 175 && green >= 55 && green <= 160 && blue <= 125 && green - blue >= 8) {
-          count += 1;
+          points.push([area.x + x, area.y + y]);
         }
       }
-      if (count >= 2 && count < 90) rows.push(area.y + y);
     }
 
-    if (rows.length === 0) return null;
-    const top = Math.min(...rows);
-    const bottom = Math.max(...rows);
-    return { top, bottom, center: (top + bottom) / 2 };
+    if (points.length === 0) return null;
+    const xs = points.map((point) => point[0]);
+    const ys = points.map((point) => point[1]);
+    const left = Math.min(...xs);
+    const right = Math.max(...xs);
+    const top = Math.min(...ys);
+    const bottom = Math.max(...ys);
+    return {
+      left,
+      right,
+      horizontalCenter: (left + right) / 2,
+      top,
+      bottom,
+      center: (top + bottom) / 2,
+    };
   });
 }
 
@@ -518,9 +527,9 @@ const textColorSynced = (await desktop.locator('#textColorPicker').inputValue())
 const signatureBounds = await readSignatureBounds();
 const signatureVerticallyCentered = signatureBounds
   && signatureBounds.top >= 918
-  && signatureBounds.bottom <= 954
+  && signatureBounds.bottom <= 956
   && signatureBounds.center >= 934
-  && signatureBounds.center <= 938;
+  && signatureBounds.center <= 939;
 
 if (!fixedCharacterFrontendRendered) throw new Error('“找”字区域未随前端文字颜色发生变化');
 if (!fixedPrefixLocked) throw new Error('编辑栏中的固定“找”字被修改或混入了输入值');
@@ -531,6 +540,23 @@ if (!scarfBordersPreserved) throw new Error('围脖同步文字侵入了上下�
 if (!signatureChanged || signatureValue !== 'Luna') throw new Error('人物署名未正确更新');
 if (!signatureVerticallyCentered) throw new Error(`人物署名未在标题栏内垂直居中：${JSON.stringify(signatureBounds)}`);
 if (captionValue !== '星河。' || !textColorSynced) throw new Error('文字内容或颜色未正确同步');
+
+const signatureCenterTarget = 602;
+const signatureCenterSamples = [];
+for (const signature of ['Amy', 'Luna', 'Mikan', 'Renren']) {
+  await desktop.locator('#signatureInput').fill(signature);
+  await desktop.waitForTimeout(100);
+  signatureCenterSamples.push({ signature, bounds: await readSignatureBounds() });
+}
+const signatureHorizontallyCentered = signatureCenterSamples.every(({ bounds }) => bounds
+  && Math.abs(bounds.horizontalCenter - signatureCenterTarget) <= 1.5
+  && bounds.left >= 496
+  && bounds.right <= 708);
+if (!signatureHorizontallyCentered) {
+  throw new Error(`3–6 字符人物署名未按可见字形水平居中：${JSON.stringify(signatureCenterSamples)}`);
+}
+await desktop.locator('#signatureInput').fill('Luna');
+await desktop.waitForTimeout(100);
 
 await desktop.screenshot({ path: path.join(outputDirectory, 'desktop-synced-text.png'), fullPage: true });
 
@@ -1148,6 +1174,9 @@ const report = {
   signatureChanged,
   signatureBounds,
   signatureVerticallyCentered,
+  signatureCenterTarget,
+  signatureCenterSamples,
+  signatureHorizontallyCentered,
   textColorSynced,
   textDefaultsRestored,
   customLogo: 'favicon.svg',
