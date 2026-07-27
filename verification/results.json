@@ -6,6 +6,46 @@
     "#277F9F",
     "#2F8A66"
   ],
+  "recommendationNoticeWorks": true,
+  "desktopToolbarEnhancements": {
+    "recommendationText": "建议使用电脑端进行访问",
+    "recommendationVisible": true,
+    "recommendationCentered": true,
+    "recommendationBackground": "rgb(255, 240, 244)",
+    "greatVibesLoaded": true,
+    "maShanZhengLoaded": true,
+    "signatureFont": "\"Great Vibes Local\", \"Ma Shan Zheng Local\", cursive",
+    "logoTextFont": "\"Great Vibes Local\", \"Ma Shan Zheng Local\", cursive"
+  },
+  "artisticFontsLoaded": true,
+  "fontResourcesSelfHosted": true,
+  "fontRequests": [
+    "http://127.0.0.1:4181/FindRenren/assets/GreatVibes-Regular-n0yYu52p.ttf",
+    "http://127.0.0.1:4181/FindRenren/assets/MaShanZheng-Regular-wERnqapb.ttf"
+  ],
+  "desktopColorPickerLayout": true,
+  "mobileColorPickerLayout": true,
+  "mobileColorDefaultsBright": true,
+  "mobileBrightHueWorks": true,
+  "mobileColorCancelRestores": true,
+  "mobileColorApplyPersists": true,
+  "mobileColorDialogFits": true,
+  "mobileColorDialogLayout": {
+    "left": 12,
+    "top": 207.796875,
+    "right": 378,
+    "bottom": 636.1875,
+    "contentFits": true
+  },
+  "compactColorDialogFits": true,
+  "compactColorDialogLayout": {
+    "left": 12,
+    "top": 135.796875,
+    "right": 308,
+    "bottom": 564.1875,
+    "contentFits": true,
+    "overflow": 0
+  },
   "customCaption": "星河。",
   "customTextColor": "#FFD84A",
   "customSignature": "Luna",
@@ -30,9 +70,9 @@
   "scarfBordersPreserved": true,
   "signatureChanged": true,
   "signatureBounds": {
-    "top": 921,
-    "bottom": 951,
-    "center": 936
+    "top": 920,
+    "bottom": 953,
+    "center": 936.5
   },
   "signatureVerticallyCentered": true,
   "textColorSynced": true,
@@ -47,22 +87,22 @@
   "logoTextModeWorks": true,
   "logoTextFollowsScarf": true,
   "logoTextGeometry": {
-    "pixels": 4636,
+    "pixels": 4873,
     "bounds": {
-      "left": 627,
-      "right": 832,
+      "left": 626,
+      "right": 830,
       "top": 543,
-      "bottom": 617
+      "bottom": 619
     },
     "left": {
-      "pixels": 2135,
-      "centerY": 598.2805620608899
+      "pixels": 2375,
+      "centerY": 593.3141052631579
     },
     "right": {
-      "pixels": 2501,
-      "centerY": 576.9464214314274
+      "pixels": 2498,
+      "centerY": 578.126901521217
     },
-    "rise": 21.334140629462468
+    "rise": 15.187203741940948
   },
   "logoImageModeRestoresOriginal": true,
   "logoDefaultsRestored": true,
@@ -211,15 +251,108 @@
   "portraitLoadingVisibleWhileModelDownloads": true,
   "portraitCutoutLoadingAnimated": true,
   "highQualityModalVisibleWhileLoading": true,
+  "highModelDownloadProgressContinuous": true,
+  "highModelAutomaticallyContinued": true,
+  "highModelDownloadSamples": [
+    {
+      "progress": 0,
+      "bytes": "0 MB / 219.1 MB"
+    },
+    {
+      "progress": 5.59,
+      "bytes": "12.2 MB / 219.1 MB"
+    },
+    {
+      "progress": 10.81,
+      "bytes": "23.7 MB / 219.1 MB"
+    },
+    {
+      "progress": 15.98,
+      "bytes": "35.0 MB / 219.1 MB"
+    },
+    {
+      "progress": 21.06,
+      "bytes": "46.1 MB / 219.1 MB"
+    },
+    {
+      "progress": 26.51,
+      "bytes": "58.1 MB / 219.1 MB"
+    },
+    {
+      "progress": 31.58,
+      "bytes": "69.2 MB / 219.1 MB"
+    },
+    {
+      "progress": 36.93,
+      "bytes": "80.9 MB / 219.1 MB"
+    },
+    {
+      "progress": 42.11,
+      "bytes": "92.3 MB / 219.1 MB"
+    },
+    {
+      "progress": 47.41,
+      "bytes": "103.9 MB / 219.1 MB"
+    },
+    {
+      "progress": 52.64,
+      "bytes": "115.3 MB / 219.1 MB"
+    },
+    {
+      "progress": 58.12,
+      "bytes": "127.4 MB / 219.1 MB"
+    },
+    {
+      "progress": 63.17,
+      "bytes": "138.4 MB / 219.1 MB"
+    },
+    {
+      "progress": 68.55,
+      "bytes": "150.2 MB / 219.1 MB"
+    },
+    {
+      "progress": 73.6,
+      "bytes": "161.3 MB / 219.1 MB"
+    },
+    {
+      "progress": 79.37,
+      "bytes": "173.9 MB / 219.1 MB"
+    },
+    {
+      "progress": 85.12,
+      "bytes": "186.5 MB / 219.1 MB"
+    },
+    {
+      "progress": 90.8,
+      "bytes": "199.0 MB / 219.1 MB"
+    },
+    {
+      "progress": 96.55,
+      "bytes": "211.6 MB / 219.1 MB"
+    },
+    {
+      "progress": 100,
+      "bytes": "219.1 MB / 219.1 MB"
+    },
+    {
+      "progress": 100,
+      "bytes": "219.1 MB / 219.1 MB"
+    },
+    {
+      "progress": 100,
+      "bytes": "219.1 MB / 219.1 MB"
+    }
+  ],
+  "highModelBytesAfterReady": "219.1 MB / 219.1 MB",
   "highQualityGlobalLoadingAnimated": true,
   "highQualityModalHiddenAfterReady": true,
   "lowQualityGlobalModalSuppressed": true,
   "mobileHighQualityModalFits": true,
   "mobileHighQualityModalLayout": {
     "left": 16,
-    "top": 295.234375,
+    "top": 268.546875,
     "right": 374,
-    "bottom": 548.765625,
+    "bottom": 575.4375,
     "contentFits": true
   },
   "desktopBrand": {
@@ -315,8 +448,8 @@
   },
   "portraitModelSelfHosted": true,
   "modelRequestStartedAt": {
-    "low": 1785119969434,
-    "high": 1785119969435
+    "low": 1785123298844,
+    "high": 1785123298844
   },
   "highModelPreloadStartedBeforeCutout": true,
   "lowModelPreloadStartedBeforeCutout": true,
@@ -330,6 +463,7 @@
   "highProgressHiddenAfterReady": true,
   "lowProgressBeforeRelease": 0,
   "lowProgressAfterReady": 100,
+  "lowModelBytesAfterReady": "6.6 MB / 6.6 MB",
   "lowProgressAdvanced": true,
   "lowProgressHiddenAfterReady": true,
   "highModelState": "ready",

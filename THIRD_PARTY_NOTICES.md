@@ -28,7 +28,17 @@
 - Font: `Ma Shan Zheng Regular`
 - Source: https://github.com/googlefonts/mashanzheng
 - License: SIL Open Font License 1.1
-- Use: Rasterized into the local transparent `brand-xunzhi-brush.png` title asset
+- Included file: `src/assets/fonts/MaShanZheng-Regular.ttf`
+- Use: CJK fallback for editable artistic text and rasterized into the local transparent `brand-xunzhi-brush.png` title asset
 - License copy: `public/assets/licenses/MaShanZheng-OFL.txt`
+
+## Great Vibes
+
+- Font: `Great Vibes Regular`
+- Source: https://github.com/googlefonts/great-vibes
+- License: SIL Open Font License 1.1
+- Included file: `src/assets/fonts/GreatVibes-Regular.ttf`
+- Use: Editable person signature and curved scarf Logo text
+- License copy: `public/assets/licenses/GreatVibes-OFL.txt`
 
 The application silently preloads both included models from `/models/` and performs all portrait matting locally in the browser. MODNet provides the 256 x 256 low-quality option; BEN2 provides the 1024 x 1024 high-quality option.

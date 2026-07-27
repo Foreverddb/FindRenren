@@ -13,6 +13,7 @@ const browser = await chromium.launch({ executablePath: chromePath, headless: tr
 const desktop = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
 const consoleErrors = [];
 const remoteModelRequests = [];
+const fontRequests = [];
 const modelRequestStartedAt = { low: 0, high: 0 };
 const cutoutRequestedAt = { low: 0, high: 0 };
 
@@ -45,6 +46,7 @@ desktop.on('console', (message) => {
 desktop.on('pageerror', (error) => consoleErrors.push(error.message));
 desktop.on('request', (request) => {
   if (/huggingface\.co|hf\.co|hf-mirror/i.test(request.url())) remoteModelRequests.push(request.url());
+  if (/\.(?:ttf|woff2?)(?:\?|$)/i.test(request.url())) fontRequests.push(request.url());
 });
 await desktop.route('**/models/onnx-community/BEN2-ONNX/onnx/model_fp16.onnx', async (route) => {
   if (!modelRequestStartedAt.high) {
@@ -125,6 +127,47 @@ if (!rasterBrandTitleCorrect) throw new Error('顶栏毛笔字图片未正确表
 if (!brandBylineCorrect) throw new Error(`顶栏署名或间距不正确：${JSON.stringify(desktopBrand)}`);
 if (!brandSubtitleCorrect) throw new Error(`顶栏副标题样式或排列不正确：${JSON.stringify(desktopBrand)}`);
 await desktop.locator('.topbar').screenshot({ path: path.join(outputDirectory, 'desktop-brand-topbar.png') });
+
+const desktopToolbarEnhancements = await desktop.evaluate(() => {
+  const recommendation = document.querySelector('.desktop-recommendation');
+  const toolbar = document.querySelector('.preview-toolbar');
+  const recommendationBounds = recommendation.getBoundingClientRect();
+  const toolbarBounds = toolbar.getBoundingClientRect();
+  const recommendationStyle = getComputedStyle(recommendation);
+  const signatureStyle = getComputedStyle(document.querySelector('#signatureInput'));
+  const logoTextStyle = getComputedStyle(document.querySelector('#logoTextInput'));
+  return {
+    recommendationText: recommendation.textContent.trim(),
+    recommendationVisible: recommendationBounds.width > 0 && recommendationBounds.height > 0,
+    recommendationCentered: Math.abs(
+      (recommendationBounds.left + recommendationBounds.right) / 2
+      - (toolbarBounds.left + toolbarBounds.right) / 2,
+    ) < 1,
+    recommendationBackground: recommendationStyle.backgroundColor,
+    greatVibesLoaded: document.fonts.check('48px "Great Vibes Local"', 'StarHoney Renren'),
+    maShanZhengLoaded: document.fonts.check('48px "Ma Shan Zheng Local"', '寻之恋恋找'),
+    signatureFont: signatureStyle.fontFamily,
+    logoTextFont: logoTextStyle.fontFamily,
+  };
+});
+const recommendationNoticeWorks = desktopToolbarEnhancements.recommendationText === '建议使用电脑端进行访问'
+  && desktopToolbarEnhancements.recommendationVisible
+  && desktopToolbarEnhancements.recommendationCentered
+  && desktopToolbarEnhancements.recommendationBackground !== 'rgba(0, 0, 0, 0)';
+const artisticFontsLoaded = desktopToolbarEnhancements.greatVibesLoaded
+  && desktopToolbarEnhancements.maShanZhengLoaded
+  && desktopToolbarEnhancements.signatureFont.includes('Great Vibes Local')
+  && desktopToolbarEnhancements.logoTextFont.includes('Great Vibes Local');
+const fontResourcesSelfHosted = fontRequests.length === 2
+  && fontRequests.every((url) => new URL(url).origin === new URL(baseUrl).origin)
+  && fontRequests.some((url) => /GreatVibes-Regular-[^/]+\.ttf$/i.test(new URL(url).pathname))
+  && fontRequests.some((url) => /MaShanZheng-Regular-[^/]+\.ttf$/i.test(new URL(url).pathname));
+const desktopColorPickerLayout = await desktop.locator('#colorPicker').isVisible()
+  && await desktop.locator('#mobileColorButton').isHidden();
+if (!recommendationNoticeWorks) throw new Error(`画布顶栏电脑端建议提示不正确：${JSON.stringify(desktopToolbarEnhancements)}`);
+if (!artisticFontsLoaded) throw new Error(`本地艺术字体未正确载入或应用：${JSON.stringify(desktopToolbarEnhancements)}`);
+if (!fontResourcesSelfHosted) throw new Error(`艺术字体未全部从站内静态资源载入：${JSON.stringify(fontRequests)}`);
+if (!desktopColorPickerLayout) throw new Error('桌面端调色控件分流不正确');
 
 const samplePoints = {
   glowStick: [215, 280],
@@ -606,13 +649,18 @@ await desktop.locator('#portraitModelProgress').waitFor({ state: 'visible' });
 const highProgressBeforeRelease = Number(await desktop.locator('#portraitModelProgress').getAttribute('aria-valuenow'));
 const highProgressVisibleOnDemand = await desktop.locator('#portraitModelProgress').isVisible()
   && (await desktop.locator('#portraitProgress').textContent()).startsWith('高质量模型')
+  && (await desktop.locator('#portraitModelProgressLabel').textContent()) === '模型文件下载'
+  && (await desktop.locator('#portraitModelProgressBytes').textContent()) === '0 MB / 219.1 MB'
   && await desktop.locator('#portraitQualityRow').isVisible();
 const portraitLoadingVisibleWhileModelDownloads = await desktop.locator('#portraitProcessingIndicator').isVisible()
   && (await desktop.locator('#portraitSection').getAttribute('aria-busy')) === 'true';
 const highQualityModalVisibleWhileLoading = await desktop.locator('#portraitHighQualityModal').isVisible()
   && (await desktop.locator('#portraitHighQualityModalTitle').textContent()) === '高质量抠图处理中'
-  && (await desktop.locator('#portraitHighQualityModalDescription').textContent()) === '高质量抠图需要耗费一定时间，请耐心等待。'
-  && (await desktop.locator('#portraitHighQualityModalStatus').textContent()).startsWith('正在加载高质量模型');
+  && (await desktop.locator('#portraitHighQualityModalDescription').textContent()).replace(/\s+/g, ' ').trim()
+    === '高质量抠图预计需要约 60–180 秒，请耐心等待并保持页面打开。'
+  && (await desktop.locator('#portraitHighQualityModalStatus').textContent()).startsWith('正在下载高质量模型')
+  && await desktop.locator('#portraitHighQualityProgress').getAttribute('aria-valuenow') !== null
+  && await desktop.locator('#portraitHighQualityProgress').evaluate((track) => track.classList.contains('is-determinate'));
 const highModelPreloadStartedBeforeCutout = modelRequestStartedAt.high > 0
   && modelRequestStartedAt.high < cutoutRequestedAt.high;
 if (!highProgressVisibleOnDemand) throw new Error('请求高质量抠图时未显示对应模型进度');
@@ -620,12 +668,52 @@ if (!portraitLoadingVisibleWhileModelDownloads) throw new Error('模型下载期
 if (!highQualityModalVisibleWhileLoading) throw new Error('高质量模型准备期间未显示全局 Loading 弹窗或等待提示');
 if (!highModelPreloadStartedBeforeCutout) throw new Error('高质量模型未在抠图前开始静默预载');
 
+await desktop.evaluate(() => {
+  const progress = document.querySelector('#portraitModelProgress');
+  const bytes = document.querySelector('#portraitModelProgressBytes');
+  window.__highModelDownloadSamples = [];
+  const record = () => {
+    const sample = {
+      progress: Number(progress.getAttribute('aria-valuenow')),
+      bytes: bytes.textContent,
+    };
+    const previous = window.__highModelDownloadSamples.at(-1);
+    if (!previous || sample.progress === 100 || sample.progress - previous.progress >= 5) {
+      window.__highModelDownloadSamples.push(sample);
+    }
+  };
+  new MutationObserver(record).observe(progress, {
+    attributes: true,
+    childList: true,
+    characterData: true,
+    subtree: true,
+  });
+  record();
+});
+
 await desktop.screenshot({ path: path.join(outputDirectory, 'desktop-model-loading-high.png'), fullPage: true });
 modelGates.high.release();
 await desktop.waitForFunction(() => {
+  const progress = Number(document.querySelector('#portraitModelProgress')?.getAttribute('aria-valuenow'));
+  return progress >= 10 && progress < 95;
+}, null, { timeout: 30000 });
+await desktop.screenshot({ path: path.join(outputDirectory, 'desktop-model-downloading-high.png'), fullPage: true });
+await desktop.waitForFunction(() => {
   const progress = document.querySelector('#portraitProgress');
   return progress?.textContent === '正在抠图' || Boolean(progress?.dataset.error);
-}, null, { timeout: 30000 });
+}, null, { timeout: 120000 });
+const highModelDownloadSamples = await desktop.evaluate(() => window.__highModelDownloadSamples);
+const highModelIntermediateSamples = highModelDownloadSamples.filter((sample) => sample.progress > 0 && sample.progress < 100);
+const highModelDownloadProgressContinuous = highModelIntermediateSamples.length >= 3
+  && highModelDownloadSamples.every((sample, index, samples) => index === 0 || sample.progress >= samples[index - 1].progress)
+  && highModelDownloadSamples.at(-1).progress === 100
+  && highModelDownloadSamples.at(-1).bytes === '219.1 MB / 219.1 MB'
+  && new Set(highModelDownloadSamples.map((sample) => sample.bytes)).size >= 4;
+const highModelAutomaticallyContinued = (await desktop.locator('#portraitProgress').textContent()) === '正在抠图';
+if (!highModelDownloadProgressContinuous) {
+  throw new Error(`高质量模型文件大小进度未持续实时更新：${JSON.stringify(highModelDownloadSamples)}`);
+}
+if (!highModelAutomaticallyContinued) throw new Error('高质量模型下载完成后未自动继续抠图');
 const portraitCutoutLoadingBefore = await desktop.locator('#portraitProcessingIndicator svg').evaluate((element) => getComputedStyle(element).transform);
 const highQualityModalAnimationBefore = await desktop.locator('#portraitHighQualityModal').evaluate((modal) => ({
   spinner: getComputedStyle(modal.querySelector('.high-quality-processing-spinner svg')).transform,
@@ -665,6 +753,7 @@ await desktop.waitForFunction(() => document.querySelector('#portraitSection')?.
 const highCutoutError = await desktop.locator('#portraitProgress').getAttribute('data-error');
 if (highCutoutError) throw new Error(`BEN2 高质量抠图失败：${highCutoutError}`);
 const highProgressAfterReady = Number(await desktop.locator('#portraitModelProgress').getAttribute('aria-valuenow'));
+const highModelBytesAfterReady = await desktop.locator('#portraitModelProgressBytes').textContent();
 const highProgressAdvanced = highProgressAfterReady > highProgressBeforeRelease;
 const highProgressHiddenAfterReady = await desktop.locator('#portraitModelProgress').isHidden();
 const highLoadingHiddenAfterReady = await desktop.locator('#portraitProcessingIndicator').isHidden();
@@ -703,7 +792,9 @@ if (!portraitFrameSmoothInHigh) throw new Error(`高质量抠图相框曲线不�
 if (!portraitHighStrictlyClipped) throw new Error('高质量抠图人物越过人物边框安全范围');
 if (!portraitHighHasSolidBackground) throw new Error(`高质量抠图背景不是稳定纯色：${JSON.stringify(portraitHighBackdrop)}`);
 if (!portraitModelSelfHosted) throw new Error(`抠图模型仍访问外部地址：${remoteModelRequests.join(' | ')}`);
-if (!highProgressAdvanced || highProgressAfterReady !== 100) throw new Error('高质量模型进度未推进到 100%');
+if (!highProgressAdvanced || highProgressAfterReady !== 100 || highModelBytesAfterReady !== '219.1 MB / 219.1 MB') {
+  throw new Error('高质量模型文件大小进度未推进到完整文件');
+}
 if (!highProgressHiddenAfterReady || !highLoadingHiddenAfterReady || !highQualityModalHiddenAfterReady || highModelState !== 'ready') {
   throw new Error('高质量抠图完成后全局弹窗、Loading、进度条未收起或状态未更新');
 }
@@ -720,7 +811,8 @@ await desktop.locator('[data-portrait-quality="low"]').click();
 await desktop.locator('#portraitModelProgress').waitFor({ state: 'visible' });
 const lowProgressBeforeRelease = Number(await desktop.locator('#portraitModelProgress').getAttribute('aria-valuenow'));
 const lowProgressVisibleOnDemand = await desktop.locator('#portraitModelProgress').isVisible()
-  && (await desktop.locator('#portraitProgress').textContent()).startsWith('低质量模型');
+  && (await desktop.locator('#portraitProgress').textContent()).startsWith('低质量模型')
+  && (await desktop.locator('#portraitModelProgressBytes').textContent()) === '0 MB / 6.6 MB';
 const lowQualityGlobalModalSuppressed = await desktop.locator('#portraitHighQualityModal').isHidden();
 const lowModelPreloadStartedBeforeCutout = modelRequestStartedAt.low > 0
   && modelRequestStartedAt.low < cutoutRequestedAt.low;
@@ -744,6 +836,7 @@ await desktop.waitForFunction(() => document.querySelector('#portraitSection')?.
 const lowCutoutError = await desktop.locator('#portraitProgress').getAttribute('data-error');
 if (lowCutoutError) throw new Error(`MODNet 低质量抠图失败：${lowCutoutError}`);
 const lowProgressAfterReady = Number(await desktop.locator('#portraitModelProgress').getAttribute('aria-valuenow'));
+const lowModelBytesAfterReady = await desktop.locator('#portraitModelProgressBytes').textContent();
 const lowProgressAdvanced = lowProgressAfterReady > lowProgressBeforeRelease;
 const lowProgressHiddenAfterReady = await desktop.locator('#portraitModelProgress').isHidden();
 const lowModelState = await desktop.locator('#portraitSection').getAttribute('data-model-state-low');
@@ -775,7 +868,9 @@ if (!portraitLowCutoutAlphaQuality) throw new Error(`MODNet 抠图透明度未�
 if (!portraitFrameSmoothInLow) throw new Error(`低质量抠图相框曲线不连续：${JSON.stringify(portraitFrameSmoothnessInLow)}`);
 if (!portraitLowStrictlyClipped) throw new Error('低质量抠图人物越过人物边框安全范围');
 if (!portraitLowHasSolidBackground) throw new Error(`低质量抠图背景不是稳定纯色：${JSON.stringify(portraitLowBackdrop)}`);
-if (!lowProgressAdvanced || lowProgressAfterReady !== 100) throw new Error('低质量模型进度未推进到 100%');
+if (!lowProgressAdvanced || lowProgressAfterReady !== 100 || lowModelBytesAfterReady !== '6.6 MB / 6.6 MB') {
+  throw new Error('低质量模型文件大小进度未推进到完整文件');
+}
 if (!lowProgressHiddenAfterReady || lowModelState !== 'ready') throw new Error('低质量模型就绪后进度条未收起或状态未更新');
 
 await desktop.waitForTimeout(300);
@@ -893,6 +988,9 @@ const mobileBrandFits = mobileBrandLayout.brandRight <= mobileBrandLayout.action
   && mobileBrandLayout.imagesLoaded;
 if (!mobileBrandFits) throw new Error(`移动端顶栏品牌与操作区发生重叠：${JSON.stringify(mobileBrandLayout)}`);
 await mobile.locator('.topbar').screenshot({ path: path.join(outputDirectory, 'mobile-brand-topbar.png') });
+const mobileColorPickerLayout = await mobile.locator('#colorPicker').isHidden()
+  && await mobile.locator('#mobileColorButton').isVisible();
+if (!mobileColorPickerLayout) throw new Error('手机端未正确切换为自定义 HSV 调色器');
 await mobile.evaluate(() => document.querySelector('#portraitHighQualityModal').showModal());
 const mobileHighQualityModalLayout = await mobile.locator('#portraitHighQualityModal').evaluate((modal) => {
   const bounds = modal.getBoundingClientRect();
@@ -912,6 +1010,48 @@ const mobileHighQualityModalFits = mobileHighQualityModalLayout.left >= 16
 if (!mobileHighQualityModalFits) throw new Error(`移动端高质量 Loading 弹窗超出安全视口：${JSON.stringify(mobileHighQualityModalLayout)}`);
 await mobile.screenshot({ path: path.join(outputDirectory, 'mobile-high-quality-modal.png') });
 await mobile.evaluate(() => document.querySelector('#portraitHighQualityModal').close());
+
+const mobileColorBeforeDialog = `#${await mobile.locator('#hexInput').inputValue()}`;
+await mobile.locator('#mobileColorButton').click();
+await mobile.locator('#mobileColorDialog').waitFor({ state: 'visible' });
+const mobileColorDialogLayout = await mobile.locator('#mobileColorDialog').evaluate((dialog) => {
+  const bounds = dialog.getBoundingClientRect();
+  return {
+    left: bounds.left,
+    top: bounds.top,
+    right: bounds.right,
+    bottom: bounds.bottom,
+    contentFits: dialog.scrollHeight <= dialog.clientHeight,
+  };
+});
+const mobileColorDefaultsBright = await mobile.locator('#mobileSaturationRange').inputValue() === '100'
+  && await mobile.locator('#mobileValueRange').inputValue() === '100'
+  && (await mobile.locator('#mobileSaturationValue').textContent()) === '100%'
+  && (await mobile.locator('#mobileValueValue').textContent()) === '100%';
+const mobileColorDialogFits = mobileColorDialogLayout.left >= 12
+  && mobileColorDialogLayout.top >= 12
+  && mobileColorDialogLayout.right <= 378
+  && mobileColorDialogLayout.bottom <= 832
+  && mobileColorDialogLayout.contentFits;
+await mobile.locator('#mobileHueRange').fill('120');
+await mobile.waitForTimeout(120);
+const mobileBrightHueWorks = (await mobile.locator('#hexInput').inputValue()) === '00FF00'
+  && (await mobile.locator('#mobileColorHex').textContent()) === '#00FF00';
+await mobile.screenshot({ path: path.join(outputDirectory, 'mobile-color-picker.png') });
+await mobile.locator('#mobileColorCancelButton').click();
+const mobileColorCancelRestores = `#${await mobile.locator('#hexInput').inputValue()}` === mobileColorBeforeDialog;
+
+await mobile.locator('#mobileColorButton').click();
+await mobile.locator('#mobileHueRange').fill('240');
+await mobile.locator('#mobileColorApplyButton').click();
+const mobileColorApplyPersists = (await mobile.locator('#hexInput').inputValue()) === '0000FF'
+  && await mobile.locator('#mobileColorDialog').isHidden();
+if (!mobileColorDefaultsBright) throw new Error('手机调色器的饱和度和明度未默认设为 100%');
+if (!mobileColorDialogFits) throw new Error(`390px 手机调色器超出安全视口：${JSON.stringify(mobileColorDialogLayout)}`);
+if (!mobileBrightHueWorks) throw new Error('手机调色器在 100% 饱和度和明度下未生成明亮纯色');
+if (!mobileColorCancelRestores) throw new Error('取消手机调色时未恢复打开前的颜色');
+if (!mobileColorApplyPersists) throw new Error('应用手机调色后颜色未保留');
+
 await mobile.locator('[data-color="#2F8A66"]').click();
 await mobile.waitForTimeout(120);
 await mobile.screenshot({ path: path.join(outputDirectory, 'mobile-green.png'), fullPage: true });
@@ -920,6 +1060,26 @@ const overflow = await mobile.evaluate(() => document.documentElement.scrollWidt
 if (overflow !== 0) throw new Error(`移动端存在 ${overflow}px 横向溢出`);
 
 await mobile.setViewportSize({ width: 320, height: 700 });
+await mobile.locator('#mobileColorButton').click();
+const compactColorDialogLayout = await mobile.locator('#mobileColorDialog').evaluate((dialog) => {
+  const bounds = dialog.getBoundingClientRect();
+  return {
+    left: bounds.left,
+    top: bounds.top,
+    right: bounds.right,
+    bottom: bounds.bottom,
+    contentFits: dialog.scrollHeight <= dialog.clientHeight,
+    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  };
+});
+const compactColorDialogFits = compactColorDialogLayout.left >= 12
+  && compactColorDialogLayout.top >= 12
+  && compactColorDialogLayout.right <= 308
+  && compactColorDialogLayout.bottom <= 688
+  && compactColorDialogLayout.contentFits
+  && compactColorDialogLayout.overflow === 0;
+if (!compactColorDialogFits) throw new Error(`320px 手机调色器超出安全视口：${JSON.stringify(compactColorDialogLayout)}`);
+await mobile.locator('#mobileColorCancelButton').click();
 const compactBrandLayout = await mobile.evaluate(() => {
   const brand = document.querySelector('.brand').getBoundingClientRect();
   const actions = document.querySelector('.topbar-actions').getBoundingClientRect();
@@ -945,6 +1105,21 @@ const report = {
   desktopViewport: '1440 × 1000',
   mobileViewport: '390 × 844',
   selectedColors: ['#277F9F', '#2F8A66'],
+  recommendationNoticeWorks,
+  desktopToolbarEnhancements,
+  artisticFontsLoaded,
+  fontResourcesSelfHosted,
+  fontRequests,
+  desktopColorPickerLayout,
+  mobileColorPickerLayout,
+  mobileColorDefaultsBright,
+  mobileBrightHueWorks,
+  mobileColorCancelRestores,
+  mobileColorApplyPersists,
+  mobileColorDialogFits,
+  mobileColorDialogLayout,
+  compactColorDialogFits,
+  compactColorDialogLayout,
   customCaption: captionValue,
   customTextColor: '#FFD84A',
   customSignature: signatureValue,
@@ -1008,6 +1183,10 @@ const report = {
   portraitLoadingVisibleWhileModelDownloads,
   portraitCutoutLoadingAnimated,
   highQualityModalVisibleWhileLoading,
+  highModelDownloadProgressContinuous,
+  highModelAutomaticallyContinued,
+  highModelDownloadSamples,
+  highModelBytesAfterReady,
   highQualityGlobalLoadingAnimated,
   highQualityModalHiddenAfterReady,
   lowQualityGlobalModalSuppressed,
@@ -1050,6 +1229,7 @@ const report = {
   highProgressHiddenAfterReady,
   lowProgressBeforeRelease,
   lowProgressAfterReady,
+  lowModelBytesAfterReady,
   lowProgressAdvanced,
   lowProgressHiddenAfterReady,
   highModelState,

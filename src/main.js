@@ -1,8 +1,8 @@
-import { createIcons, CircleUserRound, Download, Image as ImageIcon, ImagePlus, LoaderCircle, Maximize2, Palette, Pipette, RefreshCw, RotateCcw, ScanFace, Signature, Type, WandSparkles, Wind } from 'lucide';
+import { createIcons, CircleUserRound, Download, Image as ImageIcon, ImagePlus, LoaderCircle, Maximize2, Monitor, Palette, Pipette, RefreshCw, RotateCcw, ScanFace, Signature, Type, WandSparkles, Wind, X } from 'lucide';
 import './style.css';
 
 createIcons({
-  icons: { CircleUserRound, Download, Image: ImageIcon, ImagePlus, LoaderCircle, Maximize2, Palette, Pipette, RefreshCw, RotateCcw, ScanFace, Signature, Type, WandSparkles, Wind },
+  icons: { CircleUserRound, Download, Image: ImageIcon, ImagePlus, LoaderCircle, Maximize2, Monitor, Palette, Pipette, RefreshCw, RotateCcw, ScanFace, Signature, Type, WandSparkles, Wind, X },
 });
 
 const APP_BASE_URL = new URL(import.meta.env.BASE_URL, window.location.href);
@@ -56,10 +56,10 @@ const SIGNATURE_AREA = {
   height: 50,
   textX: 545,
   centerY: 936,
-  verticalOffset: 0,
+  verticalOffset: 3,
   maxWidth: 151,
-  fontSize: 52,
-  minFontSize: 24,
+  fontSize: 34,
+  minFontSize: 20,
 };
 const PORTRAIT_INNER_AREA = {
   x: 484,
@@ -86,12 +86,14 @@ const PORTRAIT_MODELS = {
     id: 'Xenova/modnet',
     dtype: 'q8',
     inputSize: 256,
+    fileSize: 6632188,
     label: '低质量',
   },
   high: {
     id: 'onnx-community/BEN2-ONNX',
     dtype: 'fp16',
     inputSize: 1024,
+    fileSize: 219121675,
     label: '高质量',
   },
 };
@@ -118,6 +120,19 @@ const state = {
 const canvas = document.querySelector('#editorCanvas');
 const context = canvas.getContext('2d', { willReadFrequently: true });
 const colorPicker = document.querySelector('#colorPicker');
+const mobileColorButton = document.querySelector('#mobileColorButton');
+const mobileColorDialog = document.querySelector('#mobileColorDialog');
+const mobileColorCloseButton = document.querySelector('#mobileColorCloseButton');
+const mobileColorCancelButton = document.querySelector('#mobileColorCancelButton');
+const mobileColorApplyButton = document.querySelector('#mobileColorApplyButton');
+const mobileColorPreview = document.querySelector('#mobileColorPreview');
+const mobileColorHex = document.querySelector('#mobileColorHex');
+const mobileHueRange = document.querySelector('#mobileHueRange');
+const mobileHueValue = document.querySelector('#mobileHueValue');
+const mobileSaturationRange = document.querySelector('#mobileSaturationRange');
+const mobileSaturationValue = document.querySelector('#mobileSaturationValue');
+const mobileValueRange = document.querySelector('#mobileValueRange');
+const mobileValueValue = document.querySelector('#mobileValueValue');
 const hexInput = document.querySelector('#hexInput');
 const colorChip = document.querySelector('#colorChip');
 const captionInput = document.querySelector('#captionInput');
@@ -147,8 +162,12 @@ const portraitProgress = document.querySelector('#portraitProgress');
 const portraitQualityRow = document.querySelector('#portraitQualityRow');
 const portraitModelProgress = document.querySelector('#portraitModelProgress');
 const portraitModelProgressFill = document.querySelector('#portraitModelProgressFill');
+const portraitModelProgressLabel = document.querySelector('#portraitModelProgressLabel');
+const portraitModelProgressBytes = document.querySelector('#portraitModelProgressBytes');
 const portraitHighQualityModal = document.querySelector('#portraitHighQualityModal');
 const portraitHighQualityModalStatus = document.querySelector('#portraitHighQualityModalStatus');
+const portraitHighQualityProgress = document.querySelector('#portraitHighQualityProgress');
+const portraitHighQualityProgressFill = document.querySelector('#portraitHighQualityProgressFill');
 const strengthRange = document.querySelector('#strengthRange');
 const strengthValue = document.querySelector('#strengthValue');
 const loadingState = document.querySelector('#loadingState');
@@ -174,9 +193,13 @@ const portraitModelRuntime = Object.fromEntries(Object.keys(PORTRAIT_MODELS).map
   segmenterPromise: undefined,
   state: 'idle',
   progress: 0,
+  loadedBytes: 0,
+  totalBytes: PORTRAIT_MODELS[quality].fileSize,
   weightProgressStarted: false,
 }]));
 let portraitModelRequestedQuality;
+let mobileColorOriginal = DEFAULT_COLOR;
+let mobileColorDraft = DEFAULT_COLOR;
 
 const image = new Image();
 image.decoding = 'async';
@@ -187,7 +210,14 @@ image.addEventListener('error', () => {
   recognitionStatus.textContent = '载入失败';
 });
 
-function initializeEditor() {
+async function initializeEditor() {
+  if (document.fonts) {
+    await Promise.allSettled([
+      document.fonts.load('48px "Great Vibes Local"', 'StarHoney Renren'),
+      document.fonts.load('48px "Ma Shan Zheng Local"', '寻之恋恋找'),
+    ]);
+  }
+
   canvas.width = image.naturalWidth;
   canvas.height = image.naturalHeight;
   context.drawImage(image, 0, 0);
@@ -245,6 +275,18 @@ function buildMask() {
 function bindControls() {
   portraitHighQualityModal.addEventListener('cancel', (event) => event.preventDefault());
   colorPicker.addEventListener('input', (event) => setColor(event.target.value));
+  mobileColorButton.addEventListener('click', openMobileColorPicker);
+  mobileColorCloseButton.addEventListener('click', cancelMobileColorPicker);
+  mobileColorCancelButton.addEventListener('click', cancelMobileColorPicker);
+  mobileColorApplyButton.addEventListener('click', applyMobileColorDraft);
+  mobileColorDialog.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    cancelMobileColorPicker();
+  });
+
+  [mobileHueRange, mobileSaturationRange, mobileValueRange].forEach((range) => {
+    range.addEventListener('input', syncMobileColorPicker);
+  });
 
   hexInput.addEventListener('input', (event) => {
     const sanitized = event.target.value.replace(/[^0-9a-f]/gi, '').slice(0, 6).toUpperCase();
@@ -386,6 +428,43 @@ function bindControls() {
 
   document.querySelector('#resetButton').addEventListener('click', resetEditor);
   document.querySelector('#downloadButton').addEventListener('click', downloadResult);
+}
+
+function openMobileColorPicker() {
+  const { r, g, b } = hexToRgb(state.color);
+  const { h } = rgbToHsv(r, g, b);
+  mobileColorOriginal = state.color;
+  mobileHueRange.value = String(Math.round(h));
+  mobileSaturationRange.value = '100';
+  mobileValueRange.value = '100';
+  syncMobileColorPicker({ applyToCanvas: false });
+  mobileColorDialog.showModal();
+}
+
+function syncMobileColorPicker(options = {}) {
+  const hue = Number(mobileHueRange.value);
+  const saturation = Number(mobileSaturationRange.value);
+  const value = Number(mobileValueRange.value);
+  mobileColorDraft = hsvToHex(hue, saturation, value);
+
+  mobileHueValue.value = `${hue}\u00b0`;
+  mobileSaturationValue.value = `${saturation}%`;
+  mobileValueValue.value = `${value}%`;
+  mobileColorHex.textContent = mobileColorDraft;
+  mobileColorPreview.style.backgroundColor = mobileColorDraft;
+  mobileColorDialog.style.setProperty('--mobile-hue-color', hsvToHex(hue, 100, 100));
+
+  if (options.applyToCanvas !== false) setColor(mobileColorDraft);
+}
+
+function applyMobileColorDraft() {
+  setColor(mobileColorDraft);
+  mobileColorDialog.close();
+}
+
+function cancelMobileColorPicker() {
+  setColor(mobileColorOriginal);
+  mobileColorDialog.close();
 }
 
 function setColor(color, options = {}) {
@@ -814,6 +893,8 @@ async function getPortraitSegmenter(transformers, quality) {
   if (!runtime.segmenterPromise) {
     setPortraitModelState(quality, 'loading');
     runtime.progress = 0;
+    runtime.loadedBytes = 0;
+    runtime.totalBytes = model.fileSize;
     runtime.weightProgressStarted = false;
     renderPortraitModelProgress();
     runtime.segmenterPromise = transformers.pipeline('background-removal', model.id, {
@@ -822,12 +903,15 @@ async function getPortraitSegmenter(transformers, quality) {
       progress_callback: (progress) => updatePortraitModelProgress(quality, progress),
     }).then((segmenter) => {
       runtime.progress = 100;
+      runtime.loadedBytes = runtime.totalBytes;
       setPortraitModelState(quality, 'ready');
       renderPortraitModelProgress();
       return segmenter;
     }).catch((error) => {
       runtime.segmenterPromise = undefined;
       runtime.progress = 0;
+      runtime.loadedBytes = 0;
+      runtime.totalBytes = model.fileSize;
       setPortraitModelState(quality, 'error');
       renderPortraitModelProgress();
       throw error;
@@ -840,13 +924,22 @@ function updatePortraitModelProgress(quality, progress) {
   if (progress.status !== 'progress' || !Number.isFinite(progress.progress)) return;
 
   const runtime = portraitModelRuntime[quality];
+  const model = PORTRAIT_MODELS[quality];
   const fileName = typeof progress.file === 'string' ? progress.file : '';
-  const nextProgress = Math.max(0, Math.min(100, Math.round(progress.progress)));
+  const callbackProgress = Math.max(0, Math.min(100, progress.progress));
   if (/\.onnx(?:$|\?)/i.test(fileName)) {
+    const isFirstWeightProgress = !runtime.weightProgressStarted;
+    const callbackTotal = model.fileSize;
+    const callbackLoaded = Number.isFinite(progress.loaded) && progress.loaded >= 0
+      ? progress.loaded
+      : callbackTotal * callbackProgress / 100;
     runtime.weightProgressStarted = true;
-    runtime.progress = nextProgress;
+    runtime.totalBytes = callbackTotal;
+    runtime.loadedBytes = Math.max(runtime.loadedBytes, Math.min(callbackLoaded, callbackTotal));
+    const byteProgress = Math.min(100, runtime.loadedBytes / callbackTotal * 100);
+    runtime.progress = isFirstWeightProgress ? byteProgress : Math.max(runtime.progress, byteProgress);
   } else if (!runtime.weightProgressStarted) {
-    runtime.progress = Math.max(runtime.progress, Math.min(8, Math.ceil(nextProgress * 0.08)));
+    runtime.progress = 0;
   }
 
   renderPortraitModelProgress();
@@ -872,11 +965,32 @@ function hidePortraitModelProgress() {
 function renderPortraitModelProgress() {
   if (!portraitModelRequestedQuality) return;
   const quality = portraitModelRequestedQuality;
-  const progress = portraitModelRuntime[quality].progress;
-  portraitModelProgress.setAttribute('aria-valuenow', String(progress));
+  const model = PORTRAIT_MODELS[quality];
+  const runtime = portraitModelRuntime[quality];
+  const progress = Math.max(0, Math.min(100, runtime.progress));
+  const roundedProgress = Math.round(progress);
+  const totalBytes = runtime.totalBytes || model.fileSize;
+  const loadedBytes = Math.min(totalBytes, runtime.loadedBytes);
+  const byteSummary = `${formatFileSize(loadedBytes)} / ${formatFileSize(totalBytes)}`;
+  const downloadComplete = roundedProgress >= 100;
+
+  portraitModelProgress.setAttribute('aria-valuenow', progress.toFixed(2));
   portraitModelProgressFill.style.width = `${progress}%`;
-  portraitProgress.textContent = `${PORTRAIT_MODELS[quality].label}模型 ${progress}%`;
-  if (quality === 'high') updateHighQualityModalStatus(`正在加载高质量模型 ${progress}%`);
+  portraitModelProgressLabel.textContent = downloadComplete ? '模型文件已下载，正在初始化' : '模型文件下载';
+  portraitModelProgressBytes.value = byteSummary;
+  portraitProgress.textContent = `${model.label}模型 ${roundedProgress}%`;
+  if (quality === 'high') {
+    portraitHighQualityModalStatus.textContent = downloadComplete
+      ? '模型文件已下载，正在初始化高质量模型'
+      : `正在下载高质量模型：${byteSummary} · ${roundedProgress}%`;
+    setHighQualityModalDeterminateProgress(progress);
+  }
+}
+
+function formatFileSize(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 MB';
+  if (bytes < 1000000) return `${Math.round(bytes / 1000)} KB`;
+  return `${(bytes / 1000000).toFixed(1)} MB`;
 }
 
 function withTimeout(promise, timeout, message) {
@@ -945,6 +1059,7 @@ function setHighQualityModalVisible(visible) {
   document.body.classList.toggle('has-processing-modal', visible);
   if (visible) {
     portraitHighQualityModalStatus.textContent = '正在准备高质量模型';
+    setHighQualityModalIndeterminateProgress();
     if (!portraitHighQualityModal.open) portraitHighQualityModal.showModal();
     return;
   }
@@ -953,7 +1068,23 @@ function setHighQualityModalVisible(visible) {
 }
 
 function updateHighQualityModalStatus(message) {
-  if (portraitHighQualityModal.open) portraitHighQualityModalStatus.textContent = message;
+  if (!portraitHighQualityModal.open) return;
+  portraitHighQualityModalStatus.textContent = message;
+  setHighQualityModalIndeterminateProgress();
+}
+
+function setHighQualityModalDeterminateProgress(progress) {
+  portraitHighQualityProgress.classList.remove('is-indeterminate');
+  portraitHighQualityProgress.classList.add('is-determinate');
+  portraitHighQualityProgress.setAttribute('aria-valuenow', progress.toFixed(2));
+  portraitHighQualityProgressFill.style.width = `${progress}%`;
+}
+
+function setHighQualityModalIndeterminateProgress() {
+  portraitHighQualityProgress.classList.remove('is-determinate');
+  portraitHighQualityProgress.classList.add('is-indeterminate');
+  portraitHighQualityProgress.removeAttribute('aria-valuenow');
+  portraitHighQualityProgressFill.style.removeProperty('width');
 }
 
 function syncPortraitModeControls() {
@@ -1142,7 +1273,7 @@ function renderCurvedScarfLogoText() {
 }
 
 function buildScarfLogoFont(size) {
-  return `italic ${size}px "Monotype Corsiva", "French Script MT", "Segoe Script", "STXingkai", "KaiTi", cursive`;
+  return `400 ${size}px "Great Vibes Local", "Ma Shan Zheng Local", cursive`;
 }
 
 function getScarfLogoCurvePoint(x) {
@@ -1292,7 +1423,7 @@ function renderSignature() {
   applyInpaintPlan(signatureInpaintPlan);
   if (!state.signature) return;
 
-  const fontBuilder = (size) => `italic ${size}px "Monotype Corsiva", "French Script MT", "Segoe Script", cursive`;
+  const fontBuilder = (size) => `400 ${size}px "Great Vibes Local", "Ma Shan Zheng Local", cursive`;
   const fontSize = fitTextFontSize(state.signature, SIGNATURE_AREA, fontBuilder);
 
   context.save();
@@ -1536,6 +1667,52 @@ function hexToRgb(hex) {
     g: (value >> 8) & 255,
     b: value & 255,
   };
+}
+
+function rgbToHsv(red, green, blue) {
+  const r = red / 255;
+  const g = green / 255;
+  const b = blue / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+  let hue = 0;
+
+  if (delta !== 0) {
+    if (max === r) hue = 60 * (((g - b) / delta) % 6);
+    else if (max === g) hue = 60 * ((b - r) / delta + 2);
+    else hue = 60 * ((r - g) / delta + 4);
+  }
+
+  if (hue < 0) hue += 360;
+  return {
+    h: hue,
+    s: max === 0 ? 0 : (delta / max) * 100,
+    v: max * 100,
+  };
+}
+
+function hsvToHex(hue, saturation, value) {
+  const h = ((hue % 360) + 360) % 360;
+  const s = Math.min(100, Math.max(0, saturation)) / 100;
+  const v = Math.min(100, Math.max(0, value)) / 100;
+  const chroma = v * s;
+  const hueSegment = h / 60;
+  const secondary = chroma * (1 - Math.abs((hueSegment % 2) - 1));
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+
+  if (hueSegment < 1) [red, green] = [chroma, secondary];
+  else if (hueSegment < 2) [red, green] = [secondary, chroma];
+  else if (hueSegment < 3) [green, blue] = [chroma, secondary];
+  else if (hueSegment < 4) [green, blue] = [secondary, chroma];
+  else if (hueSegment < 5) [red, blue] = [secondary, chroma];
+  else [red, blue] = [chroma, secondary];
+
+  const match = v - chroma;
+  const toHex = (channel) => Math.round((channel + match) * 255).toString(16).padStart(2, '0');
+  return `#${toHex(red)}${toHex(green)}${toHex(blue)}`.toUpperCase();
 }
 
 function relativeLuminance(r, g, b) {

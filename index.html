@@ -47,6 +47,10 @@
               <p class="panel-kicker">画布</p>
               <p class="canvas-meta" id="canvasMeta">1176 × 1224 px</p>
             </div>
+            <p class="desktop-recommendation">
+              <i data-lucide="monitor" aria-hidden="true"></i>
+              <span>建议使用电脑端进行访问</span>
+            </p>
             <div class="segmented-control" role="group" aria-label="预览模式">
               <button type="button" data-view="original">原图</button>
               <button class="active" type="button" data-view="result">效果</button>
@@ -82,10 +86,20 @@
             </div>
 
             <div class="color-input-row">
-              <label class="native-picker" title="打开调色板">
+              <label class="native-picker desktop-color-picker" title="打开调色板">
                 <input id="colorPicker" type="color" value="#dc5f86" aria-label="选择目标颜色" />
                 <i data-lucide="pipette" aria-hidden="true"></i>
               </label>
+              <button
+                class="native-picker mobile-color-picker"
+                id="mobileColorButton"
+                type="button"
+                title="打开手机调色板"
+                aria-label="打开手机调色板"
+                aria-haspopup="dialog"
+              >
+                <i data-lucide="pipette" aria-hidden="true"></i>
+              </button>
               <label class="hex-field">
                 <span>#</span>
                 <input id="hexInput" type="text" value="DC5F86" maxlength="6" spellcheck="false" aria-label="十六进制颜色值" />
@@ -184,7 +198,13 @@
               aria-valuenow="0"
               hidden
             >
-              <span id="portraitModelProgressFill"></span>
+              <div class="portrait-model-progress-meta">
+                <span id="portraitModelProgressLabel">模型文件下载</span>
+                <output id="portraitModelProgressBytes">0 MB / 0 MB</output>
+              </div>
+              <div class="portrait-model-progress-track" aria-hidden="true">
+                <span id="portraitModelProgressFill"></span>
+              </div>
             </div>
           </section>
 
@@ -268,9 +288,57 @@
           <i data-lucide="loader-circle"></i>
         </span>
         <h2 id="portraitHighQualityModalTitle">高质量抠图处理中</h2>
-        <p id="portraitHighQualityModalDescription">高质量抠图需要耗费一定时间，请耐心等待。</p>
+        <p class="high-quality-time-notice" id="portraitHighQualityModalDescription">
+          高质量抠图预计需要约 <strong>60–180 秒</strong>，请耐心等待并保持页面打开。
+        </p>
         <p class="high-quality-processing-status" id="portraitHighQualityModalStatus" aria-live="polite">正在准备高质量模型</p>
-        <div class="high-quality-processing-track" aria-hidden="true"><span></span></div>
+        <div
+          class="high-quality-processing-track is-indeterminate"
+          id="portraitHighQualityProgress"
+          role="progressbar"
+          aria-label="高质量模型处理进度"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <span id="portraitHighQualityProgressFill"></span>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="mobile-color-dialog" id="mobileColorDialog" aria-labelledby="mobileColorDialogTitle">
+      <div class="mobile-color-dialog-content">
+        <div class="mobile-color-dialog-header">
+          <div>
+            <p class="panel-kicker">手机调色板</p>
+            <h2 id="mobileColorDialogTitle">自定义颜色</h2>
+          </div>
+          <button class="icon-button" id="mobileColorCloseButton" type="button" title="关闭" aria-label="关闭手机调色板">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="mobile-color-preview-row">
+          <span class="mobile-color-preview" id="mobileColorPreview" aria-hidden="true"></span>
+          <strong id="mobileColorHex">#FF0048</strong>
+        </div>
+
+        <label class="mobile-color-control hue-control">
+          <span><span>色相</span><output id="mobileHueValue">343°</output></span>
+          <input id="mobileHueRange" type="range" min="0" max="360" value="343" aria-label="色相" />
+        </label>
+        <label class="mobile-color-control saturation-control">
+          <span><span>饱和度</span><output id="mobileSaturationValue">100%</output></span>
+          <input id="mobileSaturationRange" type="range" min="0" max="100" value="100" aria-label="饱和度" />
+        </label>
+        <label class="mobile-color-control value-control">
+          <span><span>明度</span><output id="mobileValueValue">100%</output></span>
+          <input id="mobileValueRange" type="range" min="0" max="100" value="100" aria-label="明度" />
+        </label>
+
+        <div class="mobile-color-dialog-actions">
+          <button class="secondary-button" id="mobileColorCancelButton" type="button">取消</button>
+          <button class="primary-button" id="mobileColorApplyButton" type="button">应用颜色</button>
+        </div>
       </div>
     </dialog>
 
