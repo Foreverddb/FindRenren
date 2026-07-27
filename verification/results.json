@@ -1,5 +1,5 @@
 {
-  "page": "http://127.0.0.1:4180/findxx/",
+  "page": "http://127.0.0.1:4181/FindRenren/",
   "desktopViewport": "1440 × 1000",
   "mobileViewport": "390 × 844",
   "selectedColors": [
@@ -206,8 +206,59 @@
   "portraitCachedModeSwitch": true,
   "portraitRestoreWorks": true,
   "portraitDefaultsRestored": true,
-  "highQualityDefault": true,
-  "resetPortraitHighQuality": true,
+  "lowQualityDefault": true,
+  "resetPortraitLowQuality": true,
+  "portraitLoadingVisibleWhileModelDownloads": true,
+  "portraitCutoutLoadingAnimated": true,
+  "highQualityModalVisibleWhileLoading": true,
+  "highQualityGlobalLoadingAnimated": true,
+  "highQualityModalHiddenAfterReady": true,
+  "lowQualityGlobalModalSuppressed": true,
+  "mobileHighQualityModalFits": true,
+  "mobileHighQualityModalLayout": {
+    "left": 16,
+    "top": 295.234375,
+    "right": 374,
+    "bottom": 548.765625,
+    "contentFits": true
+  },
+  "desktopBrand": {
+    "documentTitle": "寻之绘馆",
+    "logoLoaded": true,
+    "logoPath": "/FindRenren/assets/brand-logo.png",
+    "titleImageLoaded": true,
+    "titleImagePath": "/FindRenren/assets/brand-xunzhi-brush.png",
+    "titleImageAlt": "寻之",
+    "byline": "——by DdB",
+    "subtitle": "寻之，恋恋也",
+    "titleBylineGap": 18,
+    "bylineSubtitleGap": 18,
+    "captionsAligned": true,
+    "captionsShareStyle": true
+  },
+  "browserTabTitleUnchanged": true,
+  "localBrandAssetsLoaded": true,
+  "rasterBrandTitleCorrect": true,
+  "brandBylineCorrect": true,
+  "brandSubtitleCorrect": true,
+  "mobileBrandFits": true,
+  "mobileBrandLayout": {
+    "brandRight": 255.53125,
+    "actionsLeft": 292,
+    "logoWidth": 34,
+    "titleWidth": 62,
+    "subtitle": "寻之，恋恋也",
+    "imagesLoaded": true
+  },
+  "compactBrandFits": true,
+  "compactBrandLayout": {
+    "brandRight": 203.234375,
+    "actionsLeft": 234,
+    "bylineCenter": 28.5,
+    "subtitleCenter": 28.5,
+    "overflow": 0
+  },
+  "highLoadingHiddenAfterReady": true,
   "portraitHighCutoutAlpha": {
     "width": 1359,
     "height": 1359,
@@ -264,8 +315,8 @@
   },
   "portraitModelSelfHosted": true,
   "modelRequestStartedAt": {
-    "low": 1785094951172,
-    "high": 1785094951173
+    "low": 1785119969434,
+    "high": 1785119969435
   },
   "highModelPreloadStartedBeforeCutout": true,
   "lowModelPreloadStartedBeforeCutout": true,

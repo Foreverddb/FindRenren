@@ -23,4 +23,12 @@
 - License: Apache License 2.0
 - Included weight: `onnx/model_quantized.onnx` (q8, 6,632,188 bytes)
 
+## Ma Shan Zheng
+
+- Font: `Ma Shan Zheng Regular`
+- Source: https://github.com/googlefonts/mashanzheng
+- License: SIL Open Font License 1.1
+- Use: Rasterized into the local transparent `brand-xunzhi-brush.png` title asset
+- License copy: `public/assets/licenses/MaShanZheng-OFL.txt`
+
 The application silently preloads both included models from `/models/` and performs all portrait matting locally in the browser. MODNet provides the 256 x 256 low-quality option; BEN2 provides the 1024 x 1024 high-quality option.

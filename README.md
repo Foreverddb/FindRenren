@@ -28,6 +28,19 @@ npm run verify:static
 
 Vite 使用相对部署基址，因此用户站点、自定义域名和 `https://用户名.github.io/仓库名/` 项目子路径都能正确加载入口、原图、WASM 与本地模型。
 
+### 页面只显示无样式文字
+
+如果部署后只显示浏览器默认样式的文字和按钮，说明 Pages 发布了仓库根目录的开发版 `index.html`，没有发布 Vite 的 `dist/`。开发版入口中的 `%BASE_URL%` 只有在 Vite 构建时才会替换，`/src/main.js` 也不能作为 Pages 的生产入口。
+
+修复步骤：
+
+1. 打开仓库 **Settings > Pages**。
+2. 在 **Build and deployment > Source** 中选择 **GitHub Actions**，不要选择 **Deploy from a branch**。
+3. 打开 **Actions > Deploy static frontend to GitHub Pages**，点击 **Run workflow**；也可以向 `main` 推送一次提交重新触发。
+4. 等待 `Verify Pages uses GitHub Actions`、构建、审计、上传和部署全部通过，再刷新站点。
+
+工作流会在构建前检查 Pages 发布源。若仓库设置仍不正确，它会立即失败并提示切换为 GitHub Actions，避免先生成约 251 MB 的无效构建。
+
 BEN2 原始权重为 219,121,675 bytes，超过 GitHub 普通 Git 文件 100 MiB 的硬限制。仓库中保存的是 5 个均小于 50 MiB 的分片，Actions 构建时重组成发布文件；这不依赖 Git LFS，也不会改变模型内容。
 
 ## 托管限制

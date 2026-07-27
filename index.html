@@ -14,10 +14,17 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <a class="brand" href="%BASE_URL%" aria-label="寻之绘馆首页">
-          <span class="brand-mark" aria-hidden="true"></span>
-          <span class="brand-copy">
-            <span class="brand-title">寻之绘馆</span>
+        <a class="brand" href="%BASE_URL%" aria-label="寻之首页，寻之，恋恋也，by DdB">
+          <img class="brand-logo" src="%BASE_URL%assets/brand-logo.png" alt="" width="147" height="147" />
+          <span class="brand-heading">
+            <img
+              class="brand-title-image"
+              src="%BASE_URL%assets/brand-xunzhi-brush.png"
+              alt="寻之"
+              width="416"
+              height="216"
+            />
+            <span class="brand-byline">——by DdB</span>
             <span class="brand-subtitle">寻之，恋恋也</span>
           </span>
         </a>
@@ -28,7 +35,7 @@
           </button>
           <button class="primary-button" id="downloadButton" type="button">
             <i data-lucide="download" aria-hidden="true"></i>
-            <span>导出 PNG</span>
+            <span>导出图片</span>
           </button>
         </div>
       </header>
@@ -136,11 +143,11 @@
             <div class="portrait-quality-row" id="portraitQualityRow" hidden>
               <span class="portrait-quality-label">抠图质量</span>
               <div class="portrait-quality-control" role="group" aria-label="抠图质量">
-                <button type="button" data-portrait-quality="low" aria-pressed="false" title="速度更快，适合快速预览">
+                <button class="active" type="button" data-portrait-quality="low" aria-pressed="true" title="速度更快，适合快速预览">
                   <i data-lucide="gauge" aria-hidden="true"></i>
                   <span>低</span>
                 </button>
-                <button class="active" type="button" data-portrait-quality="high" aria-pressed="true" title="边缘更细致，处理时间较长">
+                <button type="button" data-portrait-quality="high" aria-pressed="false" title="边缘更细致，处理时间较长">
                   <i data-lucide="sparkles" aria-hidden="true"></i>
                   <span>高</span>
                 </button>
@@ -150,6 +157,9 @@
               <div class="portrait-thumbnail" id="portraitThumbnail" aria-hidden="true">
                 <i data-lucide="circle-user-round" class="portrait-placeholder"></i>
                 <img id="portraitPreview" alt="" hidden />
+                <span class="portrait-processing-indicator" id="portraitProcessingIndicator" aria-hidden="true">
+                  <i data-lucide="loader-circle"></i>
+                </span>
               </div>
               <button class="secondary-button" id="portraitUploadButton" type="button">
                 <i data-lucide="image-plus" aria-hidden="true"></i>
@@ -246,6 +256,23 @@
         </aside>
       </main>
     </div>
+
+    <dialog
+      class="high-quality-processing-modal"
+      id="portraitHighQualityModal"
+      aria-labelledby="portraitHighQualityModalTitle"
+      aria-describedby="portraitHighQualityModalDescription"
+    >
+      <div class="high-quality-processing-content">
+        <span class="high-quality-processing-spinner" aria-hidden="true">
+          <i data-lucide="loader-circle"></i>
+        </span>
+        <h2 id="portraitHighQualityModalTitle">高质量抠图处理中</h2>
+        <p id="portraitHighQualityModalDescription">高质量抠图需要耗费一定时间，请耐心等待。</p>
+        <p class="high-quality-processing-status" id="portraitHighQualityModalStatus" aria-live="polite">正在准备高质量模型</p>
+        <div class="high-quality-processing-track" aria-hidden="true"><span></span></div>
+      </div>
+    </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script type="module" src="/src/main.js"></script>

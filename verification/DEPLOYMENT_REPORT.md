@@ -20,6 +20,38 @@
 | Pages 发布 | 无部署配置 | 增加官方 Pages Actions 工作流 |
 | 发布产物检查 | 无 | 增加路径、资源、模型哈希、分片大小和站点总大小检查 |
 
+## 线上故障诊断：`blog.yuki-ddb.cn/FindRenren/`
+
+2026-07-27 对线上地址进行了浏览器与 HTTP 实测。页面返回 200，但返回内容是仓库根目录中的开发版 `index.html`，不是 Vite 生成的 `dist/index.html`。
+
+| 线上信号 | 实测结果 | 含义 |
+| --- | --- | --- |
+| favicon 地址 | `/FindRenren/%BASE_URL%favicon.svg`，404 | Vite 占位符没有经过构建替换 |
+| 模块入口 | `https://blog.yuki-ddb.cn/src/main.js`，404 | 根路径脚本引用越过了 `/FindRenren/` |
+| 样式表数量 | 0 | `src/style.css` 依赖 Vite 从 JS 导入，脚本未运行所以页面无样式 |
+| Canvas 展示尺寸 | 1176 × 1224 CSS px | 初始化脚本未运行，Canvas 保留 HTML 属性尺寸且内容为空 |
+| 自定义部署工作流 | 构建、静态审计通过，`Configure Pages` 失败 | GitHub Pages 没有配置为 Actions 发布源 |
+| 平台部署工作流 | `pages build and deployment` 成功 | 当前使用的是从 `main` 分支直接发布 |
+
+失败工作流为 [Deploy static frontend to GitHub Pages #1](https://github.com/Foreverddb/FindRenren/actions/runs/30217636769)。GitHub 的原始错误为：`Get Pages site failed. Please verify that the repository has Pages enabled and configured to build using GitHub Actions`。
+
+### 根因与修复
+
+根因是仓库 **Settings > Pages > Build and deployment > Source** 选择了 **Deploy from a branch**。这种模式会直接发布 `main` 根目录，而本项目必须先执行 Vite 构建并发布 `dist/`。
+
+将 Source 改成 **GitHub Actions** 后，在 Actions 页面手动运行 `Deploy static frontend to GitHub Pages`，或向 `main` 推送新提交。该设置属于 GitHub 仓库的外部配置，不能仅通过提交代码替代。工作流已把 Pages 配置检查移动到 251 MB 构建之前，设置错误时会快速失败。
+
+### 修复路径模拟复测
+
+使用生产 `dist/` 在 `http://127.0.0.1:4181/FindRenren/` 模拟与线上完全相同的项目子路径，验证结果如下：
+
+- 生产模块入口：1 个，来自 `./assets/index-*.js`
+- 生产样式表：1 个，来自 `./assets/index-*.css`
+- 页面初始化：通过，识别 548,848 个目标像素并关闭加载遮罩
+- 本地图片：企鹅原图、顶栏 Logo 与毛笔字标题均成功加载
+- 页面标题：保持 `寻之绘馆`
+- 横向溢出：0
+
 ## 产物审计
 
 | 指标 | 结果 |

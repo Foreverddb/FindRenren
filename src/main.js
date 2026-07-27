@@ -1,8 +1,8 @@
-import { createIcons, CircleUserRound, Download, Image as ImageIcon, ImagePlus, Maximize2, Palette, Pipette, RefreshCw, RotateCcw, ScanFace, Signature, Type, WandSparkles, Wind } from 'lucide';
+import { createIcons, CircleUserRound, Download, Image as ImageIcon, ImagePlus, LoaderCircle, Maximize2, Palette, Pipette, RefreshCw, RotateCcw, ScanFace, Signature, Type, WandSparkles, Wind } from 'lucide';
 import './style.css';
 
 createIcons({
-  icons: { CircleUserRound, Download, Image: ImageIcon, ImagePlus, Maximize2, Palette, Pipette, RefreshCw, RotateCcw, ScanFace, Signature, Type, WandSparkles, Wind },
+  icons: { CircleUserRound, Download, Image: ImageIcon, ImagePlus, LoaderCircle, Maximize2, Palette, Pipette, RefreshCw, RotateCcw, ScanFace, Signature, Type, WandSparkles, Wind },
 });
 
 const APP_BASE_URL = new URL(import.meta.env.BASE_URL, window.location.href);
@@ -105,7 +105,7 @@ const state = {
   logoText: DEFAULT_LOGO_TEXT,
   logoImage: null,
   portraitMode: 'full',
-  portraitQuality: 'high',
+  portraitQuality: 'low',
   portraitFile: null,
   portraitImage: null,
   portraitCutouts: { low: null, high: null },
@@ -140,12 +140,15 @@ const portraitUploadButton = document.querySelector('#portraitUploadButton');
 const portraitResetButton = document.querySelector('#portraitResetButton');
 const portraitPreview = document.querySelector('#portraitPreview');
 const portraitThumbnail = document.querySelector('#portraitThumbnail');
+const portraitProcessingIndicator = document.querySelector('#portraitProcessingIndicator');
 const portraitFileName = document.querySelector('#portraitFileName');
 const portraitState = document.querySelector('#portraitState');
 const portraitProgress = document.querySelector('#portraitProgress');
 const portraitQualityRow = document.querySelector('#portraitQualityRow');
 const portraitModelProgress = document.querySelector('#portraitModelProgress');
 const portraitModelProgressFill = document.querySelector('#portraitModelProgressFill');
+const portraitHighQualityModal = document.querySelector('#portraitHighQualityModal');
+const portraitHighQualityModalStatus = document.querySelector('#portraitHighQualityModalStatus');
 const strengthRange = document.querySelector('#strengthRange');
 const strengthValue = document.querySelector('#strengthValue');
 const loadingState = document.querySelector('#loadingState');
@@ -240,6 +243,7 @@ function buildMask() {
 }
 
 function bindControls() {
+  portraitHighQualityModal.addEventListener('cancel', (event) => event.preventDefault());
   colorPicker.addEventListener('input', (event) => setColor(event.target.value));
 
   hexInput.addEventListener('input', (event) => {
@@ -711,6 +715,7 @@ async function preparePortraitCutout() {
   if (runtime.state === 'ready') {
     hidePortraitModelProgress();
     portraitProgress.textContent = '正在抠图';
+    updateHighQualityModalStatus('正在启动高质量抠图');
   } else {
     showPortraitModelProgress(quality);
   }
@@ -722,6 +727,8 @@ async function preparePortraitCutout() {
 
     hidePortraitModelProgress();
     portraitProgress.textContent = '正在抠图';
+    updateHighQualityModalStatus('正在进行高质量抠图');
+    await waitForUiPaint();
     const rawImage = await transformers.RawImage.fromBlob(sourceFile);
     const output = await withTimeout(segmenter(rawImage), 240000, `${model.label}本地抠图超时`);
     if (requestId !== portraitRequestId || sourceFile !== state.portraitFile || quality !== state.portraitQuality) return false;
@@ -869,6 +876,7 @@ function renderPortraitModelProgress() {
   portraitModelProgress.setAttribute('aria-valuenow', String(progress));
   portraitModelProgressFill.style.width = `${progress}%`;
   portraitProgress.textContent = `${PORTRAIT_MODELS[quality].label}模型 ${progress}%`;
+  if (quality === 'high') updateHighQualityModalStatus(`正在加载高质量模型 ${progress}%`);
 }
 
 function withTimeout(promise, timeout, message) {
@@ -877,6 +885,14 @@ function withTimeout(promise, timeout, message) {
     timer = setTimeout(() => reject(new Error(message)), timeout);
   });
   return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
+}
+
+function waitForUiPaint() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => window.setTimeout(resolve, 600));
+    });
+  });
 }
 
 function findOpaqueBounds(sourceCanvas) {
@@ -913,6 +929,8 @@ function setPortraitProcessing(processing) {
   state.portraitProcessing = processing;
   portraitSection.classList.toggle('is-processing', processing);
   portraitSection.setAttribute('aria-busy', String(processing));
+  portraitProcessingIndicator.classList.toggle('is-visible', processing);
+  setHighQualityModalVisible(processing && state.portraitQuality === 'high');
   portraitUploadButton.disabled = processing;
   portraitResetButton.disabled = processing || !state.portraitImage;
   document.querySelectorAll('[data-portrait-mode]').forEach((button) => {
@@ -921,6 +939,21 @@ function setPortraitProcessing(processing) {
   document.querySelectorAll('[data-portrait-quality]').forEach((button) => {
     button.disabled = processing;
   });
+}
+
+function setHighQualityModalVisible(visible) {
+  document.body.classList.toggle('has-processing-modal', visible);
+  if (visible) {
+    portraitHighQualityModalStatus.textContent = '正在准备高质量模型';
+    if (!portraitHighQualityModal.open) portraitHighQualityModal.showModal();
+    return;
+  }
+
+  if (portraitHighQualityModal.open) portraitHighQualityModal.close();
+}
+
+function updateHighQualityModalStatus(message) {
+  if (portraitHighQualityModal.open) portraitHighQualityModalStatus.textContent = message;
 }
 
 function syncPortraitModeControls() {
@@ -981,7 +1014,7 @@ function clearCustomPortrait(shouldRender = true) {
   clearPortraitCutoutCache();
   portraitObjectUrl = undefined;
   state.portraitMode = 'full';
-  state.portraitQuality = 'high';
+  state.portraitQuality = 'low';
   state.portraitFile = null;
   state.portraitImage = null;
   state.portraitProcessing = false;
@@ -991,6 +1024,8 @@ function clearCustomPortrait(shouldRender = true) {
   portraitUploadButton.disabled = false;
   portraitSection.classList.remove('is-processing');
   portraitSection.setAttribute('aria-busy', 'false');
+  portraitProcessingIndicator.classList.remove('is-visible');
+  setHighQualityModalVisible(false);
   document.querySelectorAll('[data-portrait-mode]').forEach((button) => {
     button.disabled = false;
   });
