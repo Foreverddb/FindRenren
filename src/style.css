@@ -24,6 +24,8 @@
   --accent-rgb: 220, 95, 134;
   --text-color: #ffffff;
   --text-picker-contrast: #353940;
+  --image-background-color: #f7fbf3;
+  --image-background-picker-contrast: #353940;
   --line: #e2e5e9;
   --muted: #737982;
   --panel: #ffffff;
@@ -714,6 +716,30 @@ input:focus-visible {
 
 .portrait-quality-control {
   min-height: 34px;
+}
+
+.image-background-section {
+  display: grid;
+  gap: 12px;
+}
+
+.image-background-section .section-title-row {
+  margin-bottom: 0;
+}
+
+.image-background-control {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.image-background-picker {
+  background: var(--image-background-color);
+  color: var(--image-background-picker-contrast);
+}
+
+.image-background-picker svg {
+  filter: none;
 }
 
 .portrait-control-row {

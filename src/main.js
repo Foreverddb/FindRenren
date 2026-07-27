@@ -12,6 +12,7 @@ const DEFAULT_CAPTION = '恋恋。';
 const DEFAULT_TEXT_COLOR = '#FFFFFF';
 const DEFAULT_SIGNATURE = 'Renren';
 const DEFAULT_LOGO_TEXT = 'StarHoney';
+const DEFAULT_IMAGE_BACKGROUND_COLOR = '#F7FBF3';
 const BASE_PINK = { h: 343 / 360, s: 0.58, l: 0.73 };
 const CAPTION_AREA = {
   patchX: 350,
@@ -101,6 +102,7 @@ const PORTRAIT_MODELS = {
 
 const state = {
   color: DEFAULT_COLOR,
+  imageBackgroundColor: DEFAULT_IMAGE_BACKGROUND_COLOR,
   caption: DEFAULT_CAPTION,
   textColor: DEFAULT_TEXT_COLOR,
   signature: DEFAULT_SIGNATURE,
@@ -136,6 +138,8 @@ const mobileValueRange = document.querySelector('#mobileValueRange');
 const mobileValueValue = document.querySelector('#mobileValueValue');
 const hexInput = document.querySelector('#hexInput');
 const colorChip = document.querySelector('#colorChip');
+const imageBackgroundColorPicker = document.querySelector('#imageBackgroundColorPicker');
+const imageBackgroundHexInput = document.querySelector('#imageBackgroundHexInput');
 const captionInput = document.querySelector('#captionInput');
 const textColorPicker = document.querySelector('#textColorPicker');
 const textHexInput = document.querySelector('#textHexInput');
@@ -179,6 +183,7 @@ const toast = document.querySelector('#toast');
 let originalImageData;
 let workingImageData;
 let maskStrength;
+let imageBackgroundMaskStrength;
 let scarfInpaintPlan;
 let signatureInpaintPlan;
 let logoInpaintPlan;
@@ -225,14 +230,17 @@ async function initializeEditor() {
   originalImageData = context.getImageData(0, 0, canvas.width, canvas.height);
   workingImageData = context.createImageData(canvas.width, canvas.height);
   maskStrength = new Uint8ClampedArray(canvas.width * canvas.height);
+  imageBackgroundMaskStrength = new Uint8ClampedArray(canvas.width * canvas.height);
 
   buildMask();
+  buildImageBackgroundMask();
   scarfInpaintPlan = createInpaintPlan(SCARF_TEXT_AREA, isScarfTextPixel, isScarfBackgroundPixel, 4);
   signatureInpaintPlan = createInpaintPlan(SIGNATURE_AREA, isSignatureTextPixel, isSignatureBackgroundPixel, 6);
   logoInpaintPlan = createInpaintPlan(SCARF_LOGO_AREA, isScarfLogoPixel, isScarfBackgroundPixel, 4);
   bindControls();
   updateThemeColor(state.color);
   updateTextColorControl(state.textColor);
+  updateImageBackgroundColorControl(state.imageBackgroundColor);
   render();
 
   loadingState.classList.add('hidden');
@@ -270,6 +278,71 @@ function buildMask() {
     maskStrength[pixelIndex] = byteStrength;
 
     if (byteStrength >= 20) recognizedPixels += 1;
+  }
+}
+
+function buildImageBackgroundMask() {
+  const pixels = originalImageData.data;
+  const width = canvas.width;
+  const height = canvas.height;
+  const totalPixels = width * height;
+  const candidates = new Uint8Array(totalPixels);
+  const visited = new Uint8Array(totalPixels);
+  const queue = new Int32Array(totalPixels);
+  let queueHead = 0;
+  let queueTail = 0;
+
+  for (let pixelIndex = 0; pixelIndex < totalPixels; pixelIndex += 1) {
+    const dataIndex = pixelIndex * 4;
+    const red = pixels[dataIndex] / 255;
+    const green = pixels[dataIndex + 1] / 255;
+    const blue = pixels[dataIndex + 2] / 255;
+    const maximum = Math.max(red, green, blue);
+    const minimum = Math.min(red, green, blue);
+    const chroma = maximum - minimum;
+    const lightness = (maximum + minimum) / 2;
+    const x = pixelIndex % width;
+    const y = Math.floor(pixelIndex / width);
+    const protectedPortrait = x >= PORTRAIT_FRAME_AREA.x
+      && x <= PORTRAIT_FRAME_AREA.x + PORTRAIT_FRAME_AREA.width
+      && y >= PORTRAIT_FRAME_AREA.y
+      && y <= PORTRAIT_FRAME_AREA.y + PORTRAIT_FRAME_AREA.height;
+
+    if (protectedPortrait || lightness < 0.48 || chroma > 0.18) continue;
+
+    const neutrality = 1 - smoothstep(0.035, 0.18, chroma);
+    candidates[pixelIndex] = Math.round((0.9 + neutrality * 0.1) * 255);
+  }
+
+  const enqueue = (pixelIndex) => {
+    if (visited[pixelIndex] || candidates[pixelIndex] === 0) return;
+    visited[pixelIndex] = 1;
+    queue[queueTail] = pixelIndex;
+    queueTail += 1;
+  };
+
+  const edgeSeedDepth = Math.min(12, Math.floor(Math.min(width, height) / 2));
+  for (let offset = 0; offset < edgeSeedDepth; offset += 1) {
+    for (let x = 0; x < width; x += 1) {
+      enqueue(offset * width + x);
+      enqueue((height - 1 - offset) * width + x);
+    }
+    for (let y = 0; y < height; y += 1) {
+      enqueue(y * width + offset);
+      enqueue(y * width + width - 1 - offset);
+    }
+  }
+
+  while (queueHead < queueTail) {
+    const pixelIndex = queue[queueHead];
+    queueHead += 1;
+    imageBackgroundMaskStrength[pixelIndex] = candidates[pixelIndex];
+
+    const x = pixelIndex % width;
+    if (x > 0) enqueue(pixelIndex - 1);
+    if (x < width - 1) enqueue(pixelIndex + 1);
+    if (pixelIndex >= width) enqueue(pixelIndex - width);
+    if (pixelIndex < totalPixels - width) enqueue(pixelIndex + width);
   }
 }
 
@@ -346,6 +419,20 @@ function bindControls() {
       updatePortraitPreview();
       scheduleRender();
     });
+  });
+
+  imageBackgroundColorPicker.addEventListener('input', (event) => {
+    setImageBackgroundColor(event.target.value);
+  });
+
+  imageBackgroundHexInput.addEventListener('input', (event) => {
+    const sanitized = event.target.value.replace(/[^0-9a-f]/gi, '').slice(0, 6).toUpperCase();
+    event.target.value = sanitized;
+    if (sanitized.length === 6) setImageBackgroundColor(`#${sanitized}`, { syncHex: false });
+  });
+
+  imageBackgroundHexInput.addEventListener('blur', () => {
+    imageBackgroundHexInput.value = state.imageBackgroundColor.slice(1);
   });
 
   portraitUploadButton.addEventListener('click', () => portraitInput.click());
@@ -507,6 +594,24 @@ function updateTextColorControl(color) {
   document.documentElement.style.setProperty('--text-picker-contrast', contrast);
 }
 
+function setImageBackgroundColor(color, options = {}) {
+  const normalized = normalizeHex(color);
+  if (!normalized) return;
+
+  state.imageBackgroundColor = normalized;
+  imageBackgroundColorPicker.value = normalized;
+  if (options.syncHex !== false) imageBackgroundHexInput.value = normalized.slice(1);
+  updateImageBackgroundColorControl(normalized);
+  scheduleRender();
+}
+
+function updateImageBackgroundColorControl(color) {
+  const { r, g, b } = hexToRgb(color);
+  const contrast = relativeLuminance(r, g, b) > 0.72 ? '#353940' : '#FFFFFF';
+  document.documentElement.style.setProperty('--image-background-color', color);
+  document.documentElement.style.setProperty('--image-background-picker-contrast', contrast);
+}
+
 function scheduleRender() {
   if (renderFrame) cancelAnimationFrame(renderFrame);
   renderFrame = requestAnimationFrame(render);
@@ -525,18 +630,35 @@ function render() {
   const output = workingImageData.data;
   const targetRgb = hexToRgb(state.color);
   const target = rgbToHsl(targetRgb.r / 255, targetRgb.g / 255, targetRgb.b / 255);
+  const backgroundRgb = hexToRgb(state.imageBackgroundColor);
+  const backgroundTarget = rgbToHsl(backgroundRgb.r / 255, backgroundRgb.g / 255, backgroundRgb.b / 255);
+  const replaceBackground = state.imageBackgroundColor !== DEFAULT_IMAGE_BACKGROUND_COLOR;
 
   for (let pixelIndex = 0; pixelIndex < maskStrength.length; pixelIndex += 1) {
     const dataIndex = pixelIndex * 4;
     const blendAmount = (maskStrength[pixelIndex] / 255) * state.strength;
+    const backgroundBlendAmount = replaceBackground ? imageBackgroundMaskStrength[pixelIndex] / 255 : 0;
 
-    if (blendAmount <= 0) {
-      output[dataIndex] = source[dataIndex];
-      output[dataIndex + 1] = source[dataIndex + 1];
-      output[dataIndex + 2] = source[dataIndex + 2];
-      output[dataIndex + 3] = source[dataIndex + 3];
-      continue;
+    output[dataIndex] = source[dataIndex];
+    output[dataIndex + 1] = source[dataIndex + 1];
+    output[dataIndex + 2] = source[dataIndex + 2];
+    output[dataIndex + 3] = source[dataIndex + 3];
+
+    if (backgroundBlendAmount > 0) {
+      const originalBackground = rgbToHsl(
+        source[dataIndex] / 255,
+        source[dataIndex + 1] / 255,
+        source[dataIndex + 2] / 255,
+      );
+      const backgroundLightness = remapBackgroundLightness(originalBackground.l, backgroundTarget.l);
+      const recoloredBackground = hslToRgb(backgroundTarget.h, backgroundTarget.s, backgroundLightness);
+
+      output[dataIndex] = Math.round(lerp(output[dataIndex], recoloredBackground.r * 255, backgroundBlendAmount));
+      output[dataIndex + 1] = Math.round(lerp(output[dataIndex + 1], recoloredBackground.g * 255, backgroundBlendAmount));
+      output[dataIndex + 2] = Math.round(lerp(output[dataIndex + 2], recoloredBackground.b * 255, backgroundBlendAmount));
     }
+
+    if (blendAmount <= 0) continue;
 
     const original = rgbToHsl(source[dataIndex] / 255, source[dataIndex + 1] / 255, source[dataIndex + 2] / 255);
     const recoloredLightness = remapLightness(original.l, target.l);
@@ -1606,6 +1728,16 @@ function remapLightness(sourceLightness, targetLightness) {
   return targetLightness * (sourceLightness / BASE_PINK.l);
 }
 
+function remapBackgroundLightness(sourceLightness, targetLightness) {
+  const referenceLightness = 0.965;
+  if (sourceLightness >= referenceLightness) {
+    return targetLightness
+      + ((sourceLightness - referenceLightness) / (1 - referenceLightness)) * (1 - targetLightness);
+  }
+
+  return targetLightness * (sourceLightness / referenceLightness);
+}
+
 function resetEditor() {
   state.strength = 1;
   state.caption = DEFAULT_CAPTION;
@@ -1617,6 +1749,7 @@ function resetEditor() {
   strengthRange.value = 100;
   strengthValue.value = '100%';
   setTextColor(DEFAULT_TEXT_COLOR);
+  setImageBackgroundColor(DEFAULT_IMAGE_BACKGROUND_COLOR);
   setColor(DEFAULT_COLOR);
   updateRangeFill();
   showToast('已恢复默认设置');
