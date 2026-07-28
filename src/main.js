@@ -7,6 +7,10 @@ createIcons({
 
 const APP_BASE_URL = new URL(import.meta.env.BASE_URL, window.location.href);
 const SOURCE_URL = new URL('assets/penguin-original.png', APP_BASE_URL).href;
+const EDITOR_FONTS = [
+  ['48px "Great Vibes Local"', 'StarHoney Renren'],
+  ['48px "Ma Shan Zheng Local"', '寻找恋之空恋恋找'],
+];
 const DEFAULT_COLOR = '#DC5F86';
 const DEFAULT_CAPTION = '恋恋。';
 const DEFAULT_TEXT_COLOR = '#FFFFFF';
@@ -209,21 +213,14 @@ let mobileColorDraft = DEFAULT_COLOR;
 
 const image = new Image();
 image.decoding = 'async';
-image.src = SOURCE_URL;
-image.addEventListener('load', initializeEditor);
+image.addEventListener('load', initializeEditor, { once: true });
 image.addEventListener('error', () => {
   loadingState.innerHTML = '<span>图片载入失败</span>';
   recognitionStatus.textContent = '载入失败';
-});
+}, { once: true });
+image.src = SOURCE_URL;
 
-async function initializeEditor() {
-  if (document.fonts) {
-    await Promise.allSettled([
-      document.fonts.load('48px "Great Vibes Local"', 'StarHoney Renren'),
-      document.fonts.load('48px "Ma Shan Zheng Local"', '寻找恋之空恋恋找'),
-    ]);
-  }
-
+function initializeEditor() {
   canvas.width = image.naturalWidth;
   canvas.height = image.naturalHeight;
   context.drawImage(image, 0, 0);
@@ -246,7 +243,18 @@ async function initializeEditor() {
   loadingState.classList.add('hidden');
   statusDot.classList.add('ready');
   recognitionStatus.textContent = `已识别 ${recognizedPixels.toLocaleString('zh-CN')} 个像素`;
+  loadEditorFonts();
   schedulePortraitModelPreload();
+}
+
+function loadEditorFonts() {
+  if (!document.fonts) return;
+
+  EDITOR_FONTS.forEach(([font, text]) => {
+    void document.fonts.load(font, text)
+      .then(() => scheduleRender())
+      .catch(() => {});
+  });
 }
 
 function buildMask() {
