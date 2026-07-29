@@ -176,6 +176,15 @@ const artisticFontsLoaded = desktopToolbarEnhancements.greatVibesLoaded
   && desktopToolbarEnhancements.maShanZhengLoaded
   && desktopToolbarEnhancements.signatureFont.includes('Great Vibes Local')
   && desktopToolbarEnhancements.logoTextFont.includes('Great Vibes Local');
+const expectedFontOptions = ['hand', 'song', 'system'];
+const signatureFontOptions = await desktop.locator('#signatureFontSelect option').evaluateAll((options) => (
+  options.map((option) => option.value)
+));
+const logoFontOptions = await desktop.locator('#logoFontSelect option').evaluateAll((options) => (
+  options.map((option) => option.value)
+));
+const fontMenusAvailable = signatureFontOptions.join(',') === expectedFontOptions.join(',')
+  && logoFontOptions.join(',') === expectedFontOptions.join(',');
 const fontResourcesFromHuamei = fontRequests.length === 2
   && fontRequests.every((url) => new URL(url).origin === HUAMEI_CDN_ORIGIN)
   && fontRequests.every((url) => HUAMEI_FONT_PATHS.has(new URL(url).pathname));
@@ -183,6 +192,7 @@ const desktopColorPickerLayout = await desktop.locator('#colorPicker').isVisible
   && await desktop.locator('#mobileColorButton').isHidden();
 if (!recommendationNoticeWorks) throw new Error(`画布顶栏电脑端建议提示不正确：${JSON.stringify(desktopToolbarEnhancements)}`);
 if (!artisticFontsLoaded) throw new Error(`本地艺术字体未正确载入或应用：${JSON.stringify(desktopToolbarEnhancements)}`);
+if (!fontMenusAvailable) throw new Error('人物署名或围脖字体菜单选项不完整');
 if (!fontResourcesFromHuamei) throw new Error(`艺术字体未全部从画眉 CDN 载入：${JSON.stringify(fontRequests)}`);
 if (!desktopColorPickerLayout) throw new Error('桌面端调色控件分流不正确');
 
@@ -556,6 +566,23 @@ if (!signatureChanged || signatureValue !== 'Luna') throw new Error('人物署�
 if (!signatureVerticallyCentered) throw new Error(`人物署名未在标题栏内垂直居中：${JSON.stringify(signatureBounds)}`);
 if (captionValue !== '星河。' || !textColorSynced) throw new Error('文字内容或颜色未正确同步');
 
+const signatureHandHash = await hashCanvasRegion(533, 901, 176, 62);
+await desktop.locator('#signatureFontSelect').selectOption('song');
+await desktop.waitForTimeout(120);
+const signatureSongHash = await hashCanvasRegion(533, 901, 176, 62);
+await desktop.locator('#signatureFontSelect').selectOption('system');
+await desktop.waitForTimeout(120);
+const signatureSystemHash = await hashCanvasRegion(533, 901, 176, 62);
+await desktop.locator('#signatureFontSelect').selectOption('hand');
+await desktop.waitForTimeout(120);
+const signatureFontSelectionWorks = new Set([
+  signatureHandHash,
+  signatureSongHash,
+  signatureSystemHash,
+]).size === 3
+  && (await desktop.locator('.signature-field').getAttribute('data-font')) === 'hand';
+if (!signatureFontSelectionWorks) throw new Error('人物署名字体切换未正确反映到画布');
+
 const signatureCenterTarget = 602;
 const signatureCenterSamples = [];
 for (const signature of ['Amy', 'Luna', 'Mikan', 'Renren']) {
@@ -641,6 +668,23 @@ const logoTextFollowsScarf = logoTextGeometry
 if (!logoTextModeWorks) throw new Error('围脖文字 Logo 模式或内容未正确同步');
 if (!logoTextFollowsScarf) throw new Error(`围脖文字 Logo 未沿围脖曲线安全排版：${JSON.stringify(logoTextGeometry)}`);
 
+const logoHandHash = await hashCanvasRegion(590, 505, 280, 126);
+await desktop.locator('#logoFontSelect').selectOption('song');
+await desktop.waitForTimeout(160);
+const logoSongHash = await hashCanvasRegion(590, 505, 280, 126);
+await desktop.locator('#logoFontSelect').selectOption('system');
+await desktop.waitForTimeout(160);
+const logoSystemHash = await hashCanvasRegion(590, 505, 280, 126);
+await desktop.locator('#logoFontSelect').selectOption('hand');
+await desktop.waitForTimeout(160);
+const logoFontSelectionWorks = new Set([
+  logoHandHash,
+  logoSongHash,
+  logoSystemHash,
+]).size === 3
+  && (await desktop.locator('#logoTextPanel').getAttribute('data-font')) === 'hand';
+if (!logoFontSelectionWorks) throw new Error('围脖字体切换未正确反映到画布');
+
 await desktop.waitForTimeout(1900);
 await desktop.evaluate(() => window.scrollTo(0, 0));
 await desktop.screenshot({ path: path.join(outputDirectory, 'desktop-custom-text-logo.png'), fullPage: true });
@@ -648,7 +692,8 @@ await desktop.screenshot({ path: path.join(outputDirectory, 'desktop-custom-text
 await desktop.locator('[data-logo-mode="image"]').click();
 await desktop.waitForTimeout(160);
 const logoImageModeRestoresOriginal = await hashCanvasRegion(590, 505, 280, 126) !== logoHashBefore
-  && (await desktop.locator('#logoState').textContent()) === '原始图片';
+  && (await desktop.locator('#logoState').textContent()) === '原始图片'
+  && await desktop.locator('#logoFontControl').isHidden();
 if (!logoImageModeRestoresOriginal) throw new Error('由文字 Logo 返回图片模式后未恢复原始围脖图案');
 
 await desktop.locator('#logoInput').setInputFiles(logoPath);
@@ -983,6 +1028,8 @@ const resetLogoState = await desktop.locator('#logoState').textContent();
 const resetLogoName = await desktop.locator('#logoFileName').textContent();
 const resetLogoDisabled = await desktop.locator('#logoResetButton').isDisabled();
 const resetLogoText = await desktop.locator('#logoTextInput').inputValue();
+const resetSignatureFont = await desktop.locator('#signatureFontSelect').inputValue();
+const resetLogoFont = await desktop.locator('#logoFontSelect').inputValue();
 const resetLogoTextMode = await desktop.locator('[data-logo-mode="text"]').getAttribute('aria-pressed');
 const resetLogoImageMode = await desktop.locator('[data-logo-mode="image"]').getAttribute('aria-pressed');
 const resetPortraitState = await desktop.locator('#portraitState').textContent();
@@ -991,13 +1038,17 @@ const resetPortraitDisabled = await desktop.locator('#portraitResetButton').isDi
 const resetPortraitLowQuality = await desktop.locator('[data-portrait-quality="low"]').getAttribute('aria-pressed') === 'true'
   && await desktop.locator('[data-portrait-quality="high"]').getAttribute('aria-pressed') === 'false'
   && await desktop.locator('#portraitQualityRow').isHidden();
-const textDefaultsRestored = resetCaption === '恋恋。' && resetTextColor === '#FFFFFF' && resetSignature === 'Renren';
+const textDefaultsRestored = resetCaption === '恋恋。'
+  && resetTextColor === '#FFFFFF'
+  && resetSignature === 'Renren'
+  && resetSignatureFont === 'hand';
 if (!textDefaultsRestored) throw new Error('恢复操作未还原默认标题、颜色或人物署名');
 const logoDefaultsRestored = resetLogoState === '文字 Logo'
   && resetLogoName === 'StarHoney'
   && resetLogoText === 'StarHoney'
   && resetLogoTextMode === 'true'
   && resetLogoImageMode === 'false'
+  && resetLogoFont === 'hand'
   && resetLogoDisabled;
 if (!logoDefaultsRestored) throw new Error('恢复操作未还原默认围脖 Logo');
 const portraitDefaultsRestored = resetPortraitState === '原始人物'
@@ -1160,6 +1211,7 @@ const report = {
   recommendationNoticeWorks,
   desktopToolbarEnhancements,
   artisticFontsLoaded,
+  fontMenusAvailable,
   fontResourcesFromHuamei,
   fontRequests,
   desktopColorPickerLayout,
@@ -1187,6 +1239,7 @@ const report = {
   scarfEnglishPreserved,
   scarfBordersPreserved,
   signatureChanged,
+  signatureFontSelectionWorks,
   signatureBounds,
   signatureVerticallyCentered,
   signatureCenterTarget,
@@ -1202,6 +1255,7 @@ const report = {
   logoRestoreWorks,
   customLogoText: 'Moonlight',
   logoTextModeWorks,
+  logoFontSelectionWorks,
   logoTextFollowsScarf,
   logoTextGeometry,
   logoImageModeRestoresOriginal,

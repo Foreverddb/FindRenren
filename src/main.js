@@ -15,7 +15,13 @@ const DEFAULT_CAPTION = '恋恋。';
 const DEFAULT_TEXT_COLOR = '#FFFFFF';
 const DEFAULT_SIGNATURE = 'Renren';
 const DEFAULT_LOGO_TEXT = 'StarHoney';
+const DEFAULT_FONT_STYLE = 'hand';
 const DEFAULT_IMAGE_BACKGROUND_COLOR = '#F7FBF3';
+const FONT_FAMILIES = {
+  hand: '"Great Vibes Local", "Ma Shan Zheng Local", cursive',
+  song: '"Songti SC", "STSong", "SimSun", "NSimSun", serif',
+  system: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+};
 const BASE_PINK = { h: 343 / 360, s: 0.58, l: 0.73 };
 const CAPTION_AREA = {
   patchX: 350,
@@ -109,8 +115,10 @@ const state = {
   caption: DEFAULT_CAPTION,
   textColor: DEFAULT_TEXT_COLOR,
   signature: DEFAULT_SIGNATURE,
+  signatureFont: DEFAULT_FONT_STYLE,
   logoMode: 'text',
   logoText: DEFAULT_LOGO_TEXT,
+  logoFont: DEFAULT_FONT_STYLE,
   logoImage: null,
   portraitMode: 'full',
   portraitQuality: 'low',
@@ -147,6 +155,8 @@ const captionInput = document.querySelector('#captionInput');
 const textColorPicker = document.querySelector('#textColorPicker');
 const textHexInput = document.querySelector('#textHexInput');
 const signatureInput = document.querySelector('#signatureInput');
+const signatureField = document.querySelector('.signature-field');
+const signatureFontSelect = document.querySelector('#signatureFontSelect');
 const logoInput = document.querySelector('#logoInput');
 const logoUploadButton = document.querySelector('#logoUploadButton');
 const logoResetButton = document.querySelector('#logoResetButton');
@@ -157,6 +167,8 @@ const logoState = document.querySelector('#logoState');
 const logoImagePanel = document.querySelector('#logoImagePanel');
 const logoTextPanel = document.querySelector('#logoTextPanel');
 const logoTextInput = document.querySelector('#logoTextInput');
+const logoFontControl = document.querySelector('#logoFontControl');
+const logoFontSelect = document.querySelector('#logoFontSelect');
 const portraitSection = document.querySelector('#portraitSection');
 const portraitInput = document.querySelector('#portraitInput');
 const portraitUploadButton = document.querySelector('#portraitUploadButton');
@@ -235,6 +247,7 @@ function initializeEditor() {
   signatureInpaintPlan = createInpaintPlan(SIGNATURE_AREA, isSignatureTextPixel, isSignatureBackgroundPixel, 6);
   logoInpaintPlan = createInpaintPlan(SCARF_LOGO_AREA, isScarfLogoPixel, isScarfBackgroundPixel, 4);
   bindControls();
+  syncFontControls();
   updateThemeColor(state.color);
   updateTextColorControl(state.textColor);
   updateImageBackgroundColorControl(state.imageBackgroundColor);
@@ -397,6 +410,12 @@ function bindControls() {
     scheduleRender();
   });
 
+  signatureFontSelect.addEventListener('change', (event) => {
+    state.signatureFont = event.target.value;
+    syncFontControls();
+    scheduleRender();
+  });
+
   document.querySelectorAll('[data-portrait-mode]').forEach((button) => {
     button.addEventListener('click', async () => {
       if (state.portraitProcessing || state.portraitMode === button.dataset.portraitMode) return;
@@ -493,6 +512,12 @@ function bindControls() {
     state.logoText = event.target.value.replace(/[\r\n]/g, '').slice(0, 18);
     if (event.target.value !== state.logoText) event.target.value = state.logoText;
     logoFileName.textContent = state.logoText || '空白文字';
+    scheduleRender();
+  });
+
+  logoFontSelect.addEventListener('change', (event) => {
+    state.logoFont = event.target.value;
+    syncFontControls();
     scheduleRender();
   });
 
@@ -1405,7 +1430,11 @@ function renderCurvedScarfLogoText() {
 }
 
 function buildScarfLogoFont(size) {
-  return `400 ${size}px "Great Vibes Local", "Ma Shan Zheng Local", cursive`;
+  return buildEditorFont(state.logoFont, size);
+}
+
+function buildEditorFont(fontStyle, size) {
+  return `400 ${size}px ${FONT_FAMILIES[fontStyle] || FONT_FAMILIES[DEFAULT_FONT_STYLE]}`;
 }
 
 function getScarfLogoCurvePoint(x) {
@@ -1485,6 +1514,7 @@ function syncLogoControls() {
 
   logoImagePanel.hidden = state.logoMode !== 'image';
   logoTextPanel.hidden = state.logoMode !== 'text';
+  logoFontControl.hidden = state.logoMode !== 'text';
   if (state.logoMode === 'text') {
     logoState.textContent = '文字 Logo';
     logoFileName.textContent = state.logoText || '空白文字';
@@ -1493,6 +1523,13 @@ function syncLogoControls() {
 
   logoState.textContent = state.logoImage ? '自定义图片' : '原始图片';
   logoFileName.textContent = state.logoImage ? logoFileName.dataset.imageName : DEFAULT_LOGO_TEXT;
+}
+
+function syncFontControls() {
+  signatureFontSelect.value = state.signatureFont;
+  logoFontSelect.value = state.logoFont;
+  signatureField.dataset.font = state.signatureFont;
+  logoTextPanel.dataset.font = state.logoFont;
 }
 
 function renderCaption() {
@@ -1555,7 +1592,7 @@ function renderSignature() {
   applyInpaintPlan(signatureInpaintPlan);
   if (!state.signature) return;
 
-  const fontBuilder = (size) => `400 ${size}px "Great Vibes Local", "Ma Shan Zheng Local", cursive`;
+  const fontBuilder = (size) => buildEditorFont(state.signatureFont, size);
   const fontSize = fitTextFontSize(state.signature, SIGNATURE_AREA, fontBuilder);
 
   context.save();
@@ -1752,9 +1789,12 @@ function resetEditor() {
   state.caption = DEFAULT_CAPTION;
   captionInput.value = DEFAULT_CAPTION;
   state.signature = DEFAULT_SIGNATURE;
+  state.signatureFont = DEFAULT_FONT_STYLE;
   signatureInput.value = DEFAULT_SIGNATURE;
+  state.logoFont = DEFAULT_FONT_STYLE;
   clearCustomPortrait(false);
   clearCustomLogo(false);
+  syncFontControls();
   strengthRange.value = 100;
   strengthValue.value = '100%';
   setTextColor(DEFAULT_TEXT_COLOR);

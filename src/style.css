@@ -49,7 +49,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -58,7 +59,8 @@ button {
 }
 
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -636,14 +638,50 @@ input:focus-visible {
 }
 
 .signature-field input {
-  font-family: cursive;
   font-size: 20px;
   font-style: normal;
   font-weight: 400;
 }
 
-.editor-fonts-ready .signature-field input {
-  font-family: "Great Vibes Local", "Ma Shan Zheng Local", cursive;
+.font-select-field {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  min-width: 0;
+  height: 38px;
+  overflow: hidden;
+  border: 1px solid #d9dce0;
+  border-radius: 6px;
+  background: #fff;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.font-select-field:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+}
+
+.font-select-field > span {
+  display: grid;
+  place-items: center;
+  border-right: 1px solid #e2e5e9;
+  background: #f3f5f7;
+  color: #737982;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.font-select-field select {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0 10px;
+  border: 0;
+  outline: 0;
+  background: #fff;
+  color: #2b2f34;
+  cursor: pointer;
+  font-size: 12px;
+  letter-spacing: 0;
 }
 
 .portrait-section {
@@ -1107,7 +1145,8 @@ input:focus-visible {
 }
 
 .logo-control-row[hidden],
-.logo-text-field[hidden] {
+.logo-text-field[hidden],
+.font-select-field[hidden] {
   display: none;
 }
 
@@ -1174,14 +1213,25 @@ input:focus-visible {
 }
 
 .logo-text-field input {
-  font-family: cursive;
   font-size: 19px;
   font-style: normal;
   font-weight: 400;
 }
 
-.editor-fonts-ready .logo-text-field input {
+.font-preview[data-font="hand"] input {
+  font-family: cursive;
+}
+
+.editor-fonts-ready .font-preview[data-font="hand"] input {
   font-family: "Great Vibes Local", "Ma Shan Zheng Local", cursive;
+}
+
+.font-preview[data-font="song"] input {
+  font-family: "Songti SC", "STSong", "SimSun", "NSimSun", serif;
+}
+
+.font-preview[data-font="system"] input {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 .secondary-button {

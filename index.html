@@ -263,11 +263,18 @@
           <section class="control-section signature-section">
             <div class="section-title-row">
               <h2>人物署名</h2>
-              <span class="field-default">手写体</span>
             </div>
-            <label class="text-field signature-field">
+            <label class="text-field signature-field font-preview" data-font="hand">
               <span class="signature-mark" aria-hidden="true"><i data-lucide="signature"></i></span>
               <input id="signatureInput" type="text" value="Renren" maxlength="14" aria-label="修改人物下方署名" />
+            </label>
+            <label class="font-select-field">
+              <span>字体</span>
+              <select id="signatureFontSelect" aria-label="选择人物署名字体">
+                <option value="hand">手写体</option>
+                <option value="song">宋体</option>
+                <option value="system">默认字体</option>
+              </select>
             </label>
           </section>
 
@@ -300,9 +307,17 @@
               </button>
               <input id="logoInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden />
             </div>
-            <label class="text-field logo-text-field" id="logoTextPanel">
+            <label class="text-field logo-text-field font-preview" id="logoTextPanel" data-font="hand">
               <span class="logo-text-mark" aria-hidden="true"><i data-lucide="signature"></i></span>
               <input id="logoTextInput" type="text" value="StarHoney" maxlength="18" aria-label="修改围脖文字 Logo" />
+            </label>
+            <label class="font-select-field" id="logoFontControl">
+              <span>字体</span>
+              <select id="logoFontSelect" aria-label="选择围脖文字字体">
+                <option value="hand">手写体</option>
+                <option value="song">宋体</option>
+                <option value="system">默认字体</option>
+              </select>
             </label>
             <p class="logo-file-name" id="logoFileName">StarHoney</p>
           </section>
