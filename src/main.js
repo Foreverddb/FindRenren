@@ -5,8 +5,7 @@ createIcons({
   icons: { CircleUserRound, Download, Image: ImageIcon, ImagePlus, LoaderCircle, Maximize2, Monitor, Palette, Pipette, RefreshCw, RotateCcw, ScanFace, Signature, Type, WandSparkles, Wind, X },
 });
 
-const APP_BASE_URL = new URL(import.meta.env.BASE_URL, window.location.href);
-const SOURCE_URL = new URL('assets/penguin-original.png', APP_BASE_URL).href;
+const SOURCE_URL = 'https://mdn.alipayobjects.com/huamei_eu9vnf/afts/img/A*GRSQT5i8rZEAAAAAgBAAAAgAegntAQ/original';
 const EDITOR_FONTS = [
   ['48px "Great Vibes Local"', 'StarHoney Renren'],
   ['48px "Ma Shan Zheng Local"', '寻找恋之空恋恋找'],
@@ -212,6 +211,7 @@ let mobileColorOriginal = DEFAULT_COLOR;
 let mobileColorDraft = DEFAULT_COLOR;
 
 const image = new Image();
+image.crossOrigin = 'anonymous';
 image.decoding = 'async';
 image.addEventListener('load', initializeEditor, { once: true });
 image.addEventListener('error', () => {
@@ -250,11 +250,12 @@ function initializeEditor() {
 function loadEditorFonts() {
   if (!document.fonts) return;
 
-  EDITOR_FONTS.forEach(([font, text]) => {
-    void document.fonts.load(font, text)
-      .then(() => scheduleRender())
-      .catch(() => {});
-  });
+  const loads = EDITOR_FONTS.map(([font, text]) => document.fonts.load(font, text)
+    .then(() => scheduleRender()));
+
+  void Promise.all(loads).then(() => {
+    document.documentElement.classList.add('editor-fonts-ready');
+  }).catch(() => {});
 }
 
 function buildMask() {

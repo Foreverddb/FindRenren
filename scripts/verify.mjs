@@ -6,6 +6,15 @@ const root = path.resolve(import.meta.dirname, '..');
 const outputDirectory = path.join(root, 'verification');
 const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const baseUrl = process.env.APP_URL || 'http://127.0.0.1:4173/';
+const HUAMEI_CDN_ORIGIN = 'https://mdn.alipayobjects.com';
+const HUAMEI_BRAND_PATHS = new Set([
+  '/huamei_eu9vnf/afts/img/A*obanTaI3WoQAAAAAQRAAAAgAegntAQ/fmt.webp',
+  '/huamei_eu9vnf/afts/img/A*PrknTIiaEdMAAAAAQJAAAAgAegntAQ/fmt.webp',
+]);
+const HUAMEI_FONT_PATHS = new Set([
+  '/huamei_eu9vnf/afts/file/A*yduhQr_3az4AAAAAW_AAAAgAegntAQ',
+  '/huamei_eu9vnf/afts/file/A*Mwg3RKyk7hkAAAAAgGAAAAgAegntAQ',
+]);
 
 await mkdir(outputDirectory, { recursive: true });
 
@@ -46,7 +55,10 @@ desktop.on('console', (message) => {
 desktop.on('pageerror', (error) => consoleErrors.push(error.message));
 desktop.on('request', (request) => {
   if (/huggingface\.co|hf\.co|hf-mirror/i.test(request.url())) remoteModelRequests.push(request.url());
-  if (/\.(?:ttf|woff2?)(?:\?|$)/i.test(request.url())) fontRequests.push(request.url());
+  const url = new URL(request.url());
+  if (/\.(?:ttf|woff2?)$/i.test(url.pathname) || HUAMEI_FONT_PATHS.has(url.pathname)) {
+    fontRequests.push(request.url());
+  }
 });
 await desktop.route('**/models/onnx-community/BEN2-ONNX/onnx/model_fp16.onnx', async (route) => {
   if (!modelRequestStartedAt.high) {
@@ -97,8 +109,10 @@ const desktopBrand = await desktop.evaluate(() => {
   return {
     documentTitle: document.title,
     logoLoaded: logo.complete && logo.naturalWidth === 147 && logo.naturalHeight === 147,
+    logoOrigin: new URL(logo.currentSrc).origin,
     logoPath: new URL(logo.currentSrc).pathname,
     titleImageLoaded: titleImage.complete && titleImage.naturalWidth === 956 && titleImage.naturalHeight === 216,
+    titleImageOrigin: new URL(titleImage.currentSrc).origin,
     titleImagePath: new URL(titleImage.currentSrc).pathname,
     titleImageAlt: titleImage.alt,
     titleDisplayWidth: titleBounds.width,
@@ -112,10 +126,12 @@ const desktopBrand = await desktop.evaluate(() => {
   };
 });
 const browserTabTitleCorrect = desktopBrand.documentTitle === '寻找恋之空';
-const localBrandAssetsLoaded = desktopBrand.logoLoaded
+const huameiBrandAssetsLoaded = desktopBrand.logoLoaded
   && desktopBrand.titleImageLoaded
-  && desktopBrand.logoPath.endsWith('/assets/brand-logo.png')
-  && desktopBrand.titleImagePath.endsWith('/assets/brand-find-love-sky-brush.png');
+  && desktopBrand.logoOrigin === HUAMEI_CDN_ORIGIN
+  && desktopBrand.titleImageOrigin === HUAMEI_CDN_ORIGIN
+  && HUAMEI_BRAND_PATHS.has(desktopBrand.logoPath)
+  && HUAMEI_BRAND_PATHS.has(desktopBrand.titleImagePath);
 const rasterBrandTitleCorrect = desktopBrand.titleImageAlt === '寻找恋之空'
   && desktopBrand.titleDisplayWidth === 160;
 const brandBylineCorrect = desktopBrand.byline === '——by DdB' && desktopBrand.titleBylineGap >= 14;
@@ -124,7 +140,7 @@ const brandSubtitleCorrect = desktopBrand.subtitle === '寻之，恋恋也'
   && desktopBrand.captionsAligned
   && desktopBrand.captionsShareStyle;
 if (!browserTabTitleCorrect) throw new Error(`浏览器 Tab 标题不正确：${desktopBrand.documentTitle}`);
-if (!localBrandAssetsLoaded) throw new Error(`顶栏本地品牌资源加载失败：${JSON.stringify(desktopBrand)}`);
+if (!huameiBrandAssetsLoaded) throw new Error(`顶栏画眉品牌资源加载失败：${JSON.stringify(desktopBrand)}`);
 if (!rasterBrandTitleCorrect) throw new Error('顶栏毛笔字图片未正确表达“寻找恋之空”');
 if (!brandBylineCorrect) throw new Error(`顶栏署名或间距不正确：${JSON.stringify(desktopBrand)}`);
 if (!brandSubtitleCorrect) throw new Error(`顶栏副标题样式或排列不正确：${JSON.stringify(desktopBrand)}`);
@@ -160,15 +176,14 @@ const artisticFontsLoaded = desktopToolbarEnhancements.greatVibesLoaded
   && desktopToolbarEnhancements.maShanZhengLoaded
   && desktopToolbarEnhancements.signatureFont.includes('Great Vibes Local')
   && desktopToolbarEnhancements.logoTextFont.includes('Great Vibes Local');
-const fontResourcesSelfHosted = fontRequests.length === 2
-  && fontRequests.every((url) => new URL(url).origin === new URL(baseUrl).origin)
-  && fontRequests.some((url) => /GreatVibes-Regular-[^/]+\.ttf$/i.test(new URL(url).pathname))
-  && fontRequests.some((url) => /MaShanZheng-Regular-[^/]+\.ttf$/i.test(new URL(url).pathname));
+const fontResourcesFromHuamei = fontRequests.length === 2
+  && fontRequests.every((url) => new URL(url).origin === HUAMEI_CDN_ORIGIN)
+  && fontRequests.every((url) => HUAMEI_FONT_PATHS.has(new URL(url).pathname));
 const desktopColorPickerLayout = await desktop.locator('#colorPicker').isVisible()
   && await desktop.locator('#mobileColorButton').isHidden();
 if (!recommendationNoticeWorks) throw new Error(`画布顶栏电脑端建议提示不正确：${JSON.stringify(desktopToolbarEnhancements)}`);
 if (!artisticFontsLoaded) throw new Error(`本地艺术字体未正确载入或应用：${JSON.stringify(desktopToolbarEnhancements)}`);
-if (!fontResourcesSelfHosted) throw new Error(`艺术字体未全部从站内静态资源载入：${JSON.stringify(fontRequests)}`);
+if (!fontResourcesFromHuamei) throw new Error(`艺术字体未全部从画眉 CDN 载入：${JSON.stringify(fontRequests)}`);
 if (!desktopColorPickerLayout) throw new Error('桌面端调色控件分流不正确');
 
 const samplePoints = {
@@ -1145,7 +1160,7 @@ const report = {
   recommendationNoticeWorks,
   desktopToolbarEnhancements,
   artisticFontsLoaded,
-  fontResourcesSelfHosted,
+  fontResourcesFromHuamei,
   fontRequests,
   desktopColorPickerLayout,
   mobileColorPickerLayout,
@@ -1234,7 +1249,7 @@ const report = {
   mobileHighQualityModalLayout,
   desktopBrand,
   browserTabTitleCorrect,
-  localBrandAssetsLoaded,
+  huameiBrandAssetsLoaded,
   rasterBrandTitleCorrect,
   brandBylineCorrect,
   brandSubtitleCorrect,

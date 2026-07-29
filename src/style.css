@@ -3,7 +3,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("./assets/fonts/GreatVibes-Regular.ttf") format("truetype");
+  src: url("https://mdn.alipayobjects.com/huamei_eu9vnf/afts/file/A*yduhQr_3az4AAAAAW_AAAAgAegntAQ") format("truetype");
 }
 
 @font-face {
@@ -11,7 +11,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("./assets/fonts/MaShanZheng-Regular.ttf") format("truetype");
+  src: url("https://mdn.alipayobjects.com/huamei_eu9vnf/afts/file/A*Mwg3RKyk7hkAAAAAgGAAAAgAegntAQ") format("truetype");
 }
 
 :root {
@@ -636,10 +636,14 @@ input:focus-visible {
 }
 
 .signature-field input {
-  font-family: "Great Vibes Local", "Ma Shan Zheng Local", cursive;
+  font-family: cursive;
   font-size: 20px;
   font-style: normal;
   font-weight: 400;
+}
+
+.editor-fonts-ready .signature-field input {
+  font-family: "Great Vibes Local", "Ma Shan Zheng Local", cursive;
 }
 
 .portrait-section {
@@ -1170,10 +1174,14 @@ input:focus-visible {
 }
 
 .logo-text-field input {
-  font-family: "Great Vibes Local", "Ma Shan Zheng Local", cursive;
+  font-family: cursive;
   font-size: 19px;
   font-style: normal;
   font-weight: 400;
+}
+
+.editor-fonts-ready .logo-text-field input {
+  font-family: "Great Vibes Local", "Ma Shan Zheng Local", cursive;
 }
 
 .secondary-button {
